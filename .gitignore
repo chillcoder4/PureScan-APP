@@ -1,0 +1,25 @@
+# Environment variables (API keys - NEVER commit!)
+.env
+.env.local
+.env.production
+
+# Local Netlify folder
+.netlify
+
+# Dependencies
+node_modules
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE files
+.vscode
+.idea
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*

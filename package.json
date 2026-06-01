@@ -1,0 +1,12 @@
+{
+  "name": "purescan",
+  "version": "1.0.0",
+  "description": "PureScan - Listen to Science, Not Marketing",
+  "scripts": {
+    "start": "netlify dev --functions netlify/functions",
+    "build": "echo 'No build step required for frontend'"
+  },
+  "devDependencies": {
+    "netlify-cli": "^17.38.1"
+  }
+}

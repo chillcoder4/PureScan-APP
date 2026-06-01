@@ -1,0 +1,180 @@
+/* =============================================
+   PureScan — Product Images Module CSS
+   Styles for product images and alternative cards
+   ============================================= */
+
+/* ---------- PRODUCT IMAGE IN RESULT HERO ---------- */
+.ps-product-img-wrap {
+  width: 100%;
+  max-width: 240px;
+  margin: 0 auto 1.25rem;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  position: relative;
+  aspect-ratio: 1 / 1;
+  background: var(--bg-secondary);
+  border: 2px solid var(--glass-border);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25), 0 0 24px var(--accent-glow);
+}
+
+.ps-product-img-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.5s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.ps-product-img-wrap:hover img {
+  transform: scale(1.06);
+}
+
+/* Glow ring around product image on hover */
+.ps-product-img-wrap:hover {
+  border-color: var(--accent-primary);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 32px var(--accent-glow);
+}
+
+/* ---------- SKELETON LOADER ---------- */
+.ps-img-skeleton {
+  width: 100%;
+  height: 100%;
+  min-height: 120px;
+  background: var(--bg-card);
+  position: relative;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.ps-img-skeleton-sm {
+  min-height: 100px;
+}
+
+.ps-skeleton-shimmer {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.06) 40%,
+    rgba(255, 255, 255, 0.12) 50%,
+    rgba(255, 255, 255, 0.06) 60%,
+    transparent 100%
+  );
+  animation: psShimmer 1.8s infinite;
+}
+
+[data-theme="light"] .ps-skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(0, 0, 0, 0.04) 40%,
+    rgba(0, 0, 0, 0.08) 50%,
+    rgba(0, 0, 0, 0.04) 60%,
+    transparent 100%
+  );
+}
+
+@keyframes psShimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* ---------- EMOJI PLACEHOLDER ---------- */
+.ps-img-placeholder {
+  width: 100%;
+  height: 100%;
+  min-height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 4rem;
+  background: var(--bg-secondary);
+  border-radius: inherit;
+  user-select: none;
+}
+
+.ps-img-placeholder-mini {
+  width: 100%;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.2rem;
+  background: var(--bg-secondary);
+  user-select: none;
+}
+
+
+
+/* ---------- IMAGE ERROR / RETRY ---------- */
+.ps-img-error {
+  width: 100%;
+  height: 100%;
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: var(--bg-card);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  border-radius: inherit;
+}
+
+.ps-img-error i {
+  width: 24px;
+  height: 24px;
+  opacity: 0.5;
+}
+
+/* ---------- IMAGE PLACEHOLDER BLOCK ---------- */
+.ps-img-placeholder-block {
+  width: 100%;
+  height: 100%;
+  min-height: 160px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  background: var(--bg-card);
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  border-radius: inherit;
+  text-align: center;
+  padding: 1rem;
+  letter-spacing: 0.2px;
+}
+
+.ps-img-placeholder-block--mini {
+  min-height: 85px;
+  gap: 0.35rem;
+  font-size: 0.65rem;
+  padding: 0.5rem;
+}
+
+.ps-img-placeholder-block--mini svg {
+  width: 22px;
+  height: 22px;
+}
+
+.ps-img-placeholder-block span {
+  opacity: 0.7;
+  max-width: 140px;
+  line-height: 1.4;
+}
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width: 480px) {
+  .ps-product-img-wrap {
+    max-width: 200px;
+  }
+}
+
+@media (min-width: 768px) {
+  .ps-product-img-wrap {
+    max-width: 280px;
+  }
+}
