@@ -617,12 +617,45 @@ async function stopBarcodeScanner() {
   DOM.btnStopScanner.style.display = 'none';
 }
 
-function loadImage(src) {
+function preprocessBarcodeImage(file) {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = (err) => reject(err);
-    img.src = src;
+    const objectUrl = URL.createObjectURL(file);
+    img.onload = () => {
+      const maxDim = 800; // Optimal search space for linear barcode decoders
+      let { width, height } = img;
+      
+      if (width > maxDim || height > maxDim) {
+        if (width > height) {
+          height = Math.round((height * maxDim) / width);
+          width = maxDim;
+        } else {
+          width = Math.round((width * maxDim) / height);
+          height = maxDim;
+        }
+      }
+      
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+      
+      URL.revokeObjectURL(objectUrl);
+      
+      canvas.toBlob((blob) => {
+        if (blob) {
+          resolve({ blob, canvas });
+        } else {
+          reject(new Error('Canvas toBlob failed'));
+        }
+      }, 'image/jpeg', 0.9);
+    };
+    img.onerror = (err) => {
+      URL.revokeObjectURL(objectUrl);
+      reject(err);
+    };
+    img.src = objectUrl;
   });
 }
 
@@ -632,16 +665,21 @@ async function handleBarcodeImageUpload(file) {
     return;
   }
 
-  let objectUrl = null;
+  // Show a mini processing loader
+  const originalUploadHTML = DOM.btnUploadBarcode.innerHTML;
+  DOM.btnUploadBarcode.innerHTML = '<i data-lucide="loader"></i> Processing...';
+  if (window.lucide) lucide.createIcons();
+
   let detectedText = null;
+  let preprocessed = null;
 
   try {
-    // 1. Try Native BarcodeDetector first if supported
+    // Preprocess/downscale the large photo to 800px optimal search space
+    preprocessed = await preprocessBarcodeImage(file);
+    
+    // 1. Try Native BarcodeDetector first on the preprocessed canvas if supported
     if ('BarcodeDetector' in window) {
       try {
-        objectUrl = URL.createObjectURL(file);
-        const imageElement = await loadImage(objectUrl);
-        
         const supportedFormats = await BarcodeDetector.getSupportedFormats();
         const desiredFormats = [
           'ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'itf', 'qr_code'
@@ -649,23 +687,18 @@ async function handleBarcodeImageUpload(file) {
 
         if (desiredFormats.length > 0) {
           const detector = new BarcodeDetector({ formats: desiredFormats });
-          const results = await detector.detect(imageElement);
+          const results = await detector.detect(preprocessed.canvas);
           if (results && results.length > 0) {
             detectedText = results[0].rawValue;
-            console.log('Barcode detected using native BarcodeDetector API:', detectedText);
+            console.log('Barcode detected using preprocessed canvas + native BarcodeDetector API:', detectedText);
           }
         }
       } catch (nativeErr) {
-        console.warn('Native BarcodeDetector failed or format not supported, falling back to Html5Qrcode:', nativeErr);
-      } finally {
-        if (objectUrl) {
-          URL.revokeObjectURL(objectUrl);
-          objectUrl = null;
-        }
+        console.warn('Native BarcodeDetector on canvas failed, falling back to Html5Qrcode:', nativeErr);
       }
     }
 
-    // 2. Fall back to Html5Qrcode scanFile if native scan yielded nothing
+    // 2. Fall back to Html5Qrcode scanFile using preprocessed downscaled Blob
     if (!detectedText) {
       // Create a temporary hidden div for the file scanner
       let tempDiv = document.getElementById('tempBarcodeScanner');
@@ -692,9 +725,9 @@ async function handleBarcodeImageUpload(file) {
         verbose: false
       });
 
-      detectedText = await tempScanner.scanFile(file, true);
+      detectedText = await tempScanner.scanFile(preprocessed.blob, false);
       await tempScanner.clear();
-      console.log('Barcode detected using Html5Qrcode fallback:', detectedText);
+      console.log('Barcode detected using preprocessed blob + Html5Qrcode:', detectedText);
     }
 
     // 3. Trigger success
@@ -707,6 +740,8 @@ async function handleBarcodeImageUpload(file) {
     console.error('Barcode image scan failed across all methods:', err);
     showError(t('barcodeNotDetected'));
   } finally {
+    DOM.btnUploadBarcode.innerHTML = originalUploadHTML;
+    if (window.lucide) lucide.createIcons();
     DOM.barcodeFileInput.value = '';
   }
 }
@@ -1654,6 +1689,31 @@ function init() {
     setTimeout(() => {
       document.getElementById('splashScreen').classList.add('active');
     }, 100);
+  }
+
+  // Show Update Modal if not seen yet
+  const hasSeenUpdate = localStorage.getItem('ps_seen_update_1.0.1');
+  if (!hasSeenUpdate) {
+    const updateModal = document.getElementById('updateModal');
+    const btnCloseUpdate = document.getElementById('btnCloseUpdate');
+    if (updateModal && btnCloseUpdate) {
+      setTimeout(() => {
+        updateModal.style.display = 'flex';
+        if (window.lucide) lucide.createIcons();
+      }, 800); // Small delay for premium UX feel
+
+      btnCloseUpdate.addEventListener('click', () => {
+        updateModal.style.display = 'none';
+        localStorage.setItem('ps_seen_update_1.0.1', '1');
+      });
+      
+      updateModal.addEventListener('click', (e) => {
+        if (e.target === updateModal) {
+          updateModal.style.display = 'none';
+          localStorage.setItem('ps_seen_update_1.0.1', '1');
+        }
+      });
+    }
   }
 }
 

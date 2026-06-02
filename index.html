@@ -768,7 +768,7 @@
         </div>
         <h3>Pure<span class="logo-accent">Scan</span></h3>
         <p class="about-tagline" data-i18n="aboutTagline">Listen to Science, Not Marketing.</p>
-        <span class="about-version">v1.0.0</span>
+        <span class="about-version">v1.0.1</span>
       </div>
 
       <p class="about-desc" data-i18n="aboutDesc">PureScan is an AI-powered transparency app that exposes the hidden truth behind misleading food labels and empowers every Indian household to make smarter, healthier decisions.</p>
@@ -889,6 +889,31 @@
           </div>
         </button>
       </div>
+    </div>
+  </div>
+
+  <!-- ===== UPDATE / RELEASE NOTES MODAL ===== -->
+  <div id="updateModal" class="modal" style="display:none; justify-content: center; align-items: center; z-index: var(--z-modal);">
+    <div class="modal-content glass-card" style="max-width: 400px; width: 90%; padding: 2.25rem 2rem; border-radius: var(--radius-lg); background: var(--bg-secondary); border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); position: relative; text-align: center;">
+      <div style="background: rgba(14, 165, 233, 0.1); border: 1px solid var(--accent-primary); width: 60px; height: 60px; border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem auto;">
+        <i data-lucide="sparkles" style="color: var(--accent-primary); width: 28px; height: 28px;"></i>
+      </div>
+      <h3 style="font-family: var(--font-display); font-weight: 800; font-size: 1.5rem; margin-bottom: 0.25rem; color: var(--accent-primary);">PureScan Updated!</h3>
+      <span style="background: rgba(14, 165, 233, 0.15); color: var(--accent-primary); padding: 0.25rem 0.75rem; border-radius: var(--radius-full); font-size: 0.8rem; font-weight: 700; display: inline-block; margin-bottom: 1.25rem;">v1.0.1 — Bug Fixes</span>
+      
+      <!-- Multilingual details inside popup -->
+      <div style="text-align: left; background: var(--bg-primary); border: 1px solid var(--glass-border); padding: 1.25rem; border-radius: var(--radius-md); margin-bottom: 1.5rem; font-size: 0.85rem; line-height: 1.6; color: var(--text-secondary);">
+        <p style="margin-bottom: 0.75rem; font-weight: 600; color: var(--text-primary);">What's Fixed:</p>
+        <ul style="margin: 0; padding-left: 1.15rem; display: flex; flex-direction: column; gap: 0.5rem;">
+          <li><strong>Photo Scanner Fix</strong>: Barcode detection from uploaded photos is now highly accurate via canvas downscale optimization.</li>
+          <li><strong>Camera Scanner Fix</strong>: Camera resource freezes are resolved; scanner stops properly when navigation switches or panel closes.</li>
+        </ul>
+      </div>
+
+      <button id="btnCloseUpdate" class="btn btn-primary btn-glow" style="width: 100%; padding: 0.85rem; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+        <span>Get Started</span>
+        <i data-lucide="arrow-right"></i>
+      </button>
     </div>
   </div>
 
