@@ -8,5 +8,8 @@
   },
   "devDependencies": {
     "netlify-cli": "^17.38.1"
+  },
+  "dependencies": {
+    "@capacitor/core": "^8.3.4"
   }
 }

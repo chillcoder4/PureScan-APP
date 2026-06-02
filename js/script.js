@@ -617,46 +617,98 @@ async function stopBarcodeScanner() {
   DOM.btnStopScanner.style.display = 'none';
 }
 
+function loadImage(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = (err) => reject(err);
+    img.src = src;
+  });
+}
+
 async function handleBarcodeImageUpload(file) {
   if (!file.type.startsWith('image/')) {
     showError('Please select an image file.');
     return;
   }
 
-  try {
-    // Create a temporary hidden div for the file scanner
-    let tempDiv = document.getElementById('tempBarcodeScanner');
-    if (!tempDiv) {
-      tempDiv = document.createElement('div');
-      tempDiv.id = 'tempBarcodeScanner';
-      tempDiv.style.display = 'none';
-      document.body.appendChild(tempDiv);
-    }
-    const tempScanner = new Html5Qrcode('tempBarcodeScanner', {
-      formatsToSupport: [
-        Html5QrcodeSupportedFormats.EAN_13,
-        Html5QrcodeSupportedFormats.EAN_8,
-        Html5QrcodeSupportedFormats.UPC_A,
-        Html5QrcodeSupportedFormats.UPC_E,
-        Html5QrcodeSupportedFormats.CODE_128,
-        Html5QrcodeSupportedFormats.CODE_39,
-        Html5QrcodeSupportedFormats.ITF,
-        Html5QrcodeSupportedFormats.QR_CODE
-      ],
-      experimentalFeatures: {
-        useBarCodeDetectorIfSupported: true
-      },
-      verbose: false
-    });
+  let objectUrl = null;
+  let detectedText = null;
 
-    const result = await tempScanner.scanFile(file, true);
-    onBarcodeDetected(result);
-    await tempScanner.clear();
+  try {
+    // 1. Try Native BarcodeDetector first if supported
+    if ('BarcodeDetector' in window) {
+      try {
+        objectUrl = URL.createObjectURL(file);
+        const imageElement = await loadImage(objectUrl);
+        
+        const supportedFormats = await BarcodeDetector.getSupportedFormats();
+        const desiredFormats = [
+          'ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'itf', 'qr_code'
+        ].filter(f => supportedFormats.includes(f));
+
+        if (desiredFormats.length > 0) {
+          const detector = new BarcodeDetector({ formats: desiredFormats });
+          const results = await detector.detect(imageElement);
+          if (results && results.length > 0) {
+            detectedText = results[0].rawValue;
+            console.log('Barcode detected using native BarcodeDetector API:', detectedText);
+          }
+        }
+      } catch (nativeErr) {
+        console.warn('Native BarcodeDetector failed or format not supported, falling back to Html5Qrcode:', nativeErr);
+      } finally {
+        if (objectUrl) {
+          URL.revokeObjectURL(objectUrl);
+          objectUrl = null;
+        }
+      }
+    }
+
+    // 2. Fall back to Html5Qrcode scanFile if native scan yielded nothing
+    if (!detectedText) {
+      // Create a temporary hidden div for the file scanner
+      let tempDiv = document.getElementById('tempBarcodeScanner');
+      if (!tempDiv) {
+        tempDiv = document.createElement('div');
+        tempDiv.id = 'tempBarcodeScanner';
+        tempDiv.style.display = 'none';
+        document.body.appendChild(tempDiv);
+      }
+      const tempScanner = new Html5Qrcode('tempBarcodeScanner', {
+        formatsToSupport: [
+          Html5QrcodeSupportedFormats.EAN_13,
+          Html5QrcodeSupportedFormats.EAN_8,
+          Html5QrcodeSupportedFormats.UPC_A,
+          Html5QrcodeSupportedFormats.UPC_E,
+          Html5QrcodeSupportedFormats.CODE_128,
+          Html5QrcodeSupportedFormats.CODE_39,
+          Html5QrcodeSupportedFormats.ITF,
+          Html5QrcodeSupportedFormats.QR_CODE
+        ],
+        experimentalFeatures: {
+          useBarCodeDetectorIfSupported: true
+        },
+        verbose: false
+      });
+
+      detectedText = await tempScanner.scanFile(file, true);
+      await tempScanner.clear();
+      console.log('Barcode detected using Html5Qrcode fallback:', detectedText);
+    }
+
+    // 3. Trigger success
+    if (detectedText) {
+      onBarcodeDetected(detectedText);
+    } else {
+      throw new Error('No barcode detected in image');
+    }
   } catch (err) {
-    console.error('Barcode image scan failed:', err);
+    console.error('Barcode image scan failed across all methods:', err);
     showError(t('barcodeNotDetected'));
+  } finally {
+    DOM.barcodeFileInput.value = '';
   }
-  DOM.barcodeFileInput.value = '';
 }
 
 function onBarcodeDetected(barcodeText) {
@@ -762,6 +814,17 @@ async function startAnalysis() {
   if (AppState.isScannerRunning) {
     await stopBarcodeScanner();
   }
+
+  // Close scan panel overlay if open
+  const scanPanel = document.getElementById('psScanPanel');
+  if (scanPanel) {
+    scanPanel.classList.remove('ps-panel-open');
+  }
+
+  // Reset active navigation highlights to home
+  document.querySelectorAll('.ps-nav-item').forEach(item => {
+    item.classList.toggle('ps-nav-active', item.getAttribute('data-panel') === 'home');
+  });
 
   // Navigate to loading screen
   navigateTo('loadingScreen');
@@ -1464,6 +1527,26 @@ function bindEvents() {
     searchCameraBtn.addEventListener('click', () => {
       const scanNavBtn = document.querySelector('.ps-nav-item[data-panel="scan"]');
       if (scanNavBtn) scanNavBtn.click();
+    });
+  }
+
+  // Stop scanner when switching panels via navigation bar
+  document.querySelectorAll('.ps-nav-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const panelName = item.getAttribute('data-panel');
+      if (panelName !== 'scan' && AppState.isScannerRunning) {
+        stopBarcodeScanner();
+      }
+    });
+  });
+
+  // Stop scanner when scan panel close button is clicked
+  const psScanClose = document.getElementById('psScanClose');
+  if (psScanClose) {
+    psScanClose.addEventListener('click', () => {
+      if (AppState.isScannerRunning) {
+        stopBarcodeScanner();
+      }
     });
   }
 }
