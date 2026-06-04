@@ -227,6 +227,9 @@ function toggleTheme() {
   AppState.currentTheme = AppState.currentTheme === 'dark' ? 'light' : 'dark';
   document.documentElement.setAttribute('data-theme', AppState.currentTheme);
   localStorage.setItem(CONFIG.THEME_KEY, AppState.currentTheme);
+  if (PureFirebase.auth.currentUser) {
+    PureFirebase.saveSetting('theme', AppState.currentTheme).catch(e => console.warn('Theme sync error:', e));
+  }
   if (window.lucide) lucide.createIcons();
 }
 
@@ -285,6 +288,9 @@ async function setLanguage(langCode) {
   
   AppState.currentLang = langCode;
   localStorage.setItem(CONFIG.LANG_KEY, AppState.currentLang);
+  if (PureFirebase.auth.currentUser) {
+    PureFirebase.saveSetting('lang', langCode).catch(e => console.warn('Lang sync error:', e));
+  }
   
   // Update UI active state
   DOM.languageGrid.querySelectorAll('.lang-btn').forEach(btn => {
@@ -766,7 +772,8 @@ function clearBarcodeResult() {
 }
 
 function generateBarcodeQuery(barcode) {
-  return `${barcode} food product ingredients nutrition brand details India packaged food label`;
+  // Return raw barcode so the backend can perform database resolution
+  return barcode;
 }
 
 // ==========================================
@@ -894,10 +901,15 @@ async function startAnalysis() {
       const targetLangName = LANG_CODE_TO_NAME[AppState.currentLang] || 'English';
 
       // Call secure Netlify serverless function
+      console.log(`[PureScan] Initiating API analysis request for productName: "${AppState.productName}", barcode: "${AppState.scannedBarcode || ''}"`);
       const response = await fetch('/.netlify/functions/analyze-product', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productName: AppState.productName, targetLanguage: targetLangName })
+        body: JSON.stringify({
+          productName: AppState.productName,
+          barcode: AppState.scannedBarcode,
+          targetLanguage: targetLangName
+        })
       });
 
       updateLoadingStep(1, 'done', 50);
@@ -916,9 +928,20 @@ async function startAnalysis() {
       }
 
       analysis = await response.json();
+      console.log(`[PureScan] Received API analysis response:`, analysis);
 
       if (!analysis || !analysis.healthScore) {
         throw new Error(t('apiError'));
+      }
+
+      // Validate barcode matching integrity
+      if (AppState.scannedBarcode && analysis.barcode) {
+        const expected = String(AppState.scannedBarcode).trim();
+        const received = String(analysis.barcode).trim();
+        if (expected !== received) {
+          console.error(`[PureScan] Barcode mismatch! Expected: ${expected}, Received: ${received}`);
+          throw new Error("Product barcode mismatch. Please scan the barcode again.");
+        }
       }
 
       // Check if the product is food-related
@@ -951,7 +974,7 @@ async function startAnalysis() {
     AppState.analysisResult = analysis;
 
     // Save to history
-    saveToHistory(analysis);
+    await saveToHistory(analysis);
 
     await sleep(400);
 
@@ -1125,6 +1148,10 @@ function populateReport(data) {
 // HISTORY MANAGEMENT
 // ==========================================
 function getHistory() {
+  // Use cached Firestore history if available
+  if (PureFirebase.auth.currentUser && AppState.historyCache) {
+    return AppState.historyCache;
+  }
   try {
     return JSON.parse(localStorage.getItem(CONFIG.HISTORY_KEY)) || [];
   } catch {
@@ -1132,30 +1159,34 @@ function getHistory() {
   }
 }
 
-function saveToHistory(data) {
-  const history = getHistory();
-  const entry = {
-    id: Date.now(),
-    productName: data.productName || AppState.productName,
-    healthScore: data.healthScore,
-    verdict: data.verdict,
-    date: new Date().toLocaleDateString(),
-    data: data
-  };
-
-  // Avoid duplicates (by name in last 5 items)
-  const filtered = history.filter(h =>
-    h.productName.toLowerCase() !== entry.productName.toLowerCase()
-  );
-
-  filtered.unshift(entry);
-
-  // Limit history
-  if (filtered.length > CONFIG.MAX_HISTORY) {
-    filtered.length = CONFIG.MAX_HISTORY;
+async function saveToHistory(data) {
+  if (PureFirebase.auth.currentUser) {
+    try {
+      await PureFirebase.saveScan(data);
+      // Refresh cache
+      AppState.historyCache = await PureFirebase.getHistory();
+    } catch (e) {
+      console.error('Failed to save scan to Firestore:', e);
+    }
+  } else {
+    const history = getHistory();
+    const entry = {
+      id: Date.now(),
+      productName: data.productName || AppState.productName,
+      healthScore: data.healthScore,
+      verdict: data.verdict,
+      date: new Date().toLocaleDateString(),
+      data: data
+    };
+    const filtered = history.filter(h =>
+      h.productName.toLowerCase() !== entry.productName.toLowerCase()
+    );
+    filtered.unshift(entry);
+    if (filtered.length > CONFIG.MAX_HISTORY) {
+      filtered.length = CONFIG.MAX_HISTORY;
+    }
+    localStorage.setItem(CONFIG.HISTORY_KEY, JSON.stringify(filtered));
   }
-
-  localStorage.setItem(CONFIG.HISTORY_KEY, JSON.stringify(filtered));
 }
 
 function renderHistory() {
@@ -1198,9 +1229,9 @@ function renderHistory() {
   // Click to view history item
   DOM.historyList.querySelectorAll('.history-item').forEach(item => {
     item.addEventListener('click', () => {
-      const id = parseInt(item.getAttribute('data-history-id'));
+      const rawId = item.getAttribute('data-history-id');
       const history = getHistory();
-      const entry = history.find(h => h.id === id);
+      const entry = history.find(h => String(h.id) === rawId);
       if (entry && entry.data) {
         AppState.analysisResult = entry.data;
         AppState.productName = entry.productName;
@@ -1355,8 +1386,12 @@ function bindEvents() {
       btn.addEventListener('click', () => {
         const themeVal = btn.getAttribute('data-theme-val');
         
-        // Update LocalStorage
-        localStorage.setItem('ps_custom_ui', themeVal);
+        // Update LocalStorage / Firestore
+        if (PureFirebase.auth.currentUser) {
+          PureFirebase.saveCustomUi(themeVal).catch(e => console.error("Failed to save UI theme setting:", e));
+        } else {
+          localStorage.setItem('ps_custom_ui', themeVal);
+        }
         
         // Update DOM
         document.documentElement.setAttribute('data-ui-theme', themeVal);
@@ -1380,28 +1415,181 @@ function bindEvents() {
 
   // Navigation
   DOM.btnStartScanning.addEventListener('click', () => navigateTo('howItWorksScreen'));
-  DOM.btnContinue.addEventListener('click', () => {
+  DOM.btnContinue.addEventListener('click', async () => {
+    localStorage.setItem('ps_onboarding_completed', '1');
+    localStorage.setItem('ps_seen_update_1.1.0', '1'); // Flag as seen for new users
+    if (PureFirebase.currentUserProfile) {
+      try {
+        await PureFirebase.saveSetting('onboardingCompleted', true);
+        await PureFirebase.saveSetting('seenUpdateV110', true);
+      } catch (err) {
+        console.warn("[PureScan] Failed to sync onboarding/update completed state to cloud:", err.message);
+      }
+    }
     navigateTo('registerScreen');
   });
+
+  // Auth Hub state switching
+  let authCurrentState = 'login'; // 'login', 'register', 'forgot'
+
+  const authTabLogin = document.getElementById('authTabLogin');
+  const authTabRegister = document.getElementById('authTabRegister');
+  const btnForgotPassword = document.getElementById('btnForgotPassword');
+  const btnBackToLogin = document.getElementById('btnBackToLogin');
+  const btnRegisterSubmit = document.getElementById('btnRegisterSubmit');
+
+  function showLoginState() {
+    authCurrentState = 'login';
+    if (authTabLogin) authTabLogin.classList.add('active');
+    if (authTabRegister) authTabRegister.classList.remove('active');
+    document.getElementById('authTabsToggle').style.display = 'flex';
+    document.getElementById('authScreenTitle').textContent = 'Login to PureScan';
+    document.getElementById('authScreenSub').textContent = 'Access your safe food assistant';
+    document.getElementById('authLogoIcon').setAttribute('data-lucide', 'log-in');
+    
+    document.querySelectorAll('.register-only-field').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.login-only-field').forEach(el => el.style.display = 'flex');
+    document.querySelector('.auth-password-field').style.display = 'flex';
+    document.getElementById('backToLoginContainer').style.display = 'none';
+    
+    document.getElementById('btnAuthText').textContent = 'Log In';
+    document.getElementById('btnAuthIcon').setAttribute('data-lucide', 'log-in');
+    
+    document.getElementById('regName').removeAttribute('required');
+    document.getElementById('regAge').removeAttribute('required');
+    document.getElementById('regPassword').setAttribute('required', 'true');
+    
+    if (window.lucide) lucide.createIcons();
+  }
+
+  function showRegisterState() {
+    authCurrentState = 'register';
+    if (authTabLogin) authTabLogin.classList.remove('active');
+    if (authTabRegister) authTabRegister.classList.add('active');
+    document.getElementById('authTabsToggle').style.display = 'flex';
+    document.getElementById('authScreenTitle').textContent = 'Create Profile';
+    document.getElementById('authScreenSub').textContent = 'Set up your health goals and personal details';
+    document.getElementById('authLogoIcon').setAttribute('data-lucide', 'user-plus');
+    
+    document.querySelectorAll('.register-only-field').forEach(el => el.style.display = 'flex');
+    document.querySelectorAll('.login-only-field').forEach(el => el.style.display = 'none');
+    document.querySelector('.auth-password-field').style.display = 'flex';
+    document.getElementById('backToLoginContainer').style.display = 'none';
+    
+    document.getElementById('btnAuthText').textContent = 'Create Profile & Register';
+    document.getElementById('btnAuthIcon').setAttribute('data-lucide', 'check');
+    
+    document.getElementById('regName').setAttribute('required', 'true');
+    document.getElementById('regAge').setAttribute('required', 'true');
+    document.getElementById('regPassword').setAttribute('required', 'true');
+    
+    if (window.lucide) lucide.createIcons();
+  }
+
+  function showForgotPasswordState() {
+    authCurrentState = 'forgot';
+    document.getElementById('authTabsToggle').style.display = 'none';
+    document.getElementById('authScreenTitle').textContent = 'Reset Password';
+    document.getElementById('authScreenSub').textContent = 'We will send a reset link to your email';
+    document.getElementById('authLogoIcon').setAttribute('data-lucide', 'key-round');
+    
+    document.querySelectorAll('.register-only-field').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.login-only-field').forEach(el => el.style.display = 'none');
+    document.querySelector('.auth-password-field').style.display = 'none';
+    document.getElementById('backToLoginContainer').style.display = 'block';
+    
+    document.getElementById('btnAuthText').textContent = 'Send Reset Link';
+    document.getElementById('btnAuthIcon').setAttribute('data-lucide', 'mail');
+    
+    document.getElementById('regPassword').removeAttribute('required');
+    document.getElementById('regName').removeAttribute('required');
+    document.getElementById('regAge').removeAttribute('required');
+    
+    if (window.lucide) lucide.createIcons();
+  }
+
+  if (authTabLogin) authTabLogin.addEventListener('click', showLoginState);
+  if (authTabRegister) authTabRegister.addEventListener('click', showRegisterState);
+  if (btnForgotPassword) btnForgotPassword.addEventListener('click', showForgotPasswordState);
+  if (btnBackToLogin) btnBackToLogin.addEventListener('click', showLoginState);
+
+  // Trigger login state by default on init
+  setTimeout(showLoginState, 0);
 
   // Onboarding Registration Form Submit
   const formRegister = document.getElementById('formRegister');
   if (formRegister) {
-    formRegister.addEventListener('submit', (e) => {
+    formRegister.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const profile = {
-        name: document.getElementById('regName').value.trim(),
-        email: document.getElementById('regEmail').value.trim(),
-        gender: document.querySelector('.gender-btn.active')?.getAttribute('data-gender') || 'Male',
-        age: parseInt(document.getElementById('regAge').value),
-        goal: document.getElementById('regGoal').value,
-        activity: document.getElementById('regActivity').value
-      };
-      localStorage.setItem('purescan_user_profile', JSON.stringify(profile));
-      localStorage.setItem('ps_onboarded', '1');
-      updateProfileDisplay();
-      navigateTo('inputScreen');
-      renderHistory();
+      
+      const email = document.getElementById('regEmail').value.trim();
+      
+      if (authCurrentState === 'forgot') {
+        const originalHTML = btnRegisterSubmit.innerHTML;
+        btnRegisterSubmit.disabled = true;
+        btnRegisterSubmit.innerHTML = '<i data-lucide="loader" class="ps-spin"></i> Sending...';
+        if (window.lucide) lucide.createIcons();
+        try {
+          await PureFirebase.resetPassword(email);
+          alert("Password reset email sent! Please check your inbox.");
+          showLoginState();
+        } catch (err) {
+          showError("Error: " + err.message);
+        } finally {
+          btnRegisterSubmit.disabled = false;
+          btnRegisterSubmit.innerHTML = originalHTML;
+          if (window.lucide) lucide.createIcons();
+        }
+        return;
+      }
+      
+      const password = document.getElementById('regPassword').value;
+
+      if (authCurrentState === 'register') {
+        const confirmPassword = document.getElementById('regConfirmPassword').value;
+        if (password !== confirmPassword) {
+          showError("Passwords do not match!");
+          return;
+        }
+        
+        const profile = {
+          name: document.getElementById('regName').value.trim(),
+          gender: document.querySelector('.gender-btn.active')?.getAttribute('data-gender') || 'Male',
+          age: parseInt(document.getElementById('regAge').value) || 25,
+          goal: document.getElementById('regGoal').value,
+          activity: document.getElementById('regActivity').value
+        };
+
+        const originalHTML = btnRegisterSubmit.innerHTML;
+        btnRegisterSubmit.disabled = true;
+        btnRegisterSubmit.innerHTML = '<i data-lucide="loader" class="ps-spin"></i> Registering...';
+        if (window.lucide) lucide.createIcons();
+
+        try {
+          await PureFirebase.register(email, password, profile);
+          // auth status listener will navigate
+        } catch (err) {
+          showError("Registration failed: " + err.message);
+          btnRegisterSubmit.disabled = false;
+          btnRegisterSubmit.innerHTML = originalHTML;
+          if (window.lucide) lucide.createIcons();
+        }
+      } else if (authCurrentState === 'login') {
+        const originalHTML = btnRegisterSubmit.innerHTML;
+        btnRegisterSubmit.disabled = true;
+        btnRegisterSubmit.innerHTML = '<i data-lucide="loader" class="ps-spin"></i> Logging in...';
+        if (window.lucide) lucide.createIcons();
+
+        try {
+          await PureFirebase.login(email, password);
+          // auth status listener will navigate
+        } catch (err) {
+          showError("Login failed: " + err.message);
+          btnRegisterSubmit.disabled = false;
+          btnRegisterSubmit.innerHTML = originalHTML;
+          if (window.lucide) lucide.createIcons();
+        }
+      }
     });
   }
 
@@ -1416,7 +1604,7 @@ function bindEvents() {
   // Profile Edit Form Submit
   const formEditProfile = document.getElementById('formEditProfile');
   if (formEditProfile) {
-    formEditProfile.addEventListener('submit', (e) => {
+    formEditProfile.addEventListener('submit', async (e) => {
       e.preventDefault();
       const profile = {
         name: document.getElementById('editName').value.trim(),
@@ -1426,10 +1614,31 @@ function bindEvents() {
         goal: document.getElementById('editGoal').value,
         activity: document.getElementById('editActivity').value
       };
-      localStorage.setItem('purescan_user_profile', JSON.stringify(profile));
-      updateProfileDisplay();
-      const editModal = document.getElementById('profileEditModal');
-      if (editModal) editModal.style.display = 'none';
+      
+      const submitBtn = formEditProfile.querySelector('button[type="submit"]');
+      const originalHTML = submitBtn ? submitBtn.innerHTML : '';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = 'Saving...';
+      }
+
+      try {
+        if (PureFirebase.auth.currentUser) {
+          await PureFirebase.updateProfile(profile);
+        } else {
+          localStorage.setItem('purescan_user_profile', JSON.stringify(profile));
+        }
+        updateProfileDisplay();
+        const editModal = document.getElementById('profileEditModal');
+        if (editModal) editModal.style.display = 'none';
+      } catch (err) {
+        showError("Failed to update profile: " + err.message);
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalHTML;
+        }
+      }
     });
   }
 
@@ -1447,6 +1656,61 @@ function bindEvents() {
     btnCloseProfileEdit.addEventListener('click', () => {
       const editModal = document.getElementById('profileEditModal');
       if (editModal) editModal.style.display = 'none';
+    });
+  }
+
+  // Logout Trigger
+  const profLogout = document.getElementById('profLogout');
+  if (profLogout) {
+    profLogout.addEventListener('click', async () => {
+      if (confirm("Are you sure you want to log out?")) {
+        try {
+          await PureFirebase.logout();
+          const panel = document.getElementById('psProfilePanel');
+          if (panel) panel.classList.remove('ps-panel-open');
+        } catch (e) {
+          showError("Logout failed: " + e.message);
+        }
+      }
+    });
+  }
+
+  // Avatar Upload Trigger
+  const btnTriggerAvatarUpload = document.getElementById('btnTriggerAvatarUpload');
+  const avatarFileInput = document.getElementById('avatarFileInput');
+  if (btnTriggerAvatarUpload && avatarFileInput) {
+    btnTriggerAvatarUpload.addEventListener('click', () => {
+      avatarFileInput.click();
+    });
+
+    avatarFileInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      if (!file.type.startsWith('image/')) {
+        showError("Please select a valid image file.");
+        return;
+      }
+      if (file.size > 2 * 1024 * 1024) {
+        showError("Image size should be less than 2MB.");
+        return;
+      }
+
+      const originalHTML = btnTriggerAvatarUpload.innerHTML;
+      btnTriggerAvatarUpload.innerHTML = '<i data-lucide="loader" class="ps-spin" style="color: var(--accent-primary); width:24px; height:24px;"></i>';
+      if (window.lucide) lucide.createIcons();
+
+      try {
+        const downloadURL = await PureFirebase.uploadAvatar(file);
+        const profileAvatar = document.querySelector('.profile-avatar');
+        if (profileAvatar) {
+          profileAvatar.innerHTML = `<img src="${downloadURL}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+        }
+      } catch (err) {
+        showError("Failed to upload image: " + err.message);
+        btnTriggerAvatarUpload.innerHTML = originalHTML;
+        if (window.lucide) lucide.createIcons();
+      }
     });
   }
 
@@ -1521,9 +1785,19 @@ function bindEvents() {
   }
 
   if (clearHistoryBtn) {
-    clearHistoryBtn.addEventListener('click', () => {
+    clearHistoryBtn.addEventListener('click', async () => {
       if (confirm('Clear all scan history?')) {
-        localStorage.removeItem(CONFIG.HISTORY_KEY);
+        if (PureFirebase.auth.currentUser) {
+          try {
+            await PureFirebase.clearHistory();
+            AppState.historyCache = [];
+          } catch (e) {
+            console.error('Failed to clear history from Firestore:', e);
+            alert('Failed to clear history. Please try again.');
+          }
+        } else {
+          localStorage.removeItem(CONFIG.HISTORY_KEY);
+        }
         renderHistory();
       }
     });
@@ -1590,18 +1864,35 @@ function bindEvents() {
 // PROFILE DISPLAY & EDITING
 // ==========================================
 function updateProfileDisplay() {
-  const profileData = localStorage.getItem('purescan_user_profile');
-  if (!profileData) return;
+  let profile = null;
+  if (PureFirebase.auth.currentUser && PureFirebase.currentUserProfile) {
+    profile = PureFirebase.currentUserProfile;
+  } else {
+    const profileData = localStorage.getItem('purescan_user_profile');
+    if (profileData) {
+      try { profile = JSON.parse(profileData); } catch(e) {}
+    }
+  }
+  if (!profile) return;
   
   try {
-    const profile = JSON.parse(profileData);
-    
     // Update Profile Panel Card
     const profileNameEl = document.querySelector('#psProfilePanel .profile-name');
     const profileEmailEl = document.querySelector('#psProfilePanel .profile-email');
-    if (profileNameEl) profileNameEl.textContent = profile.name || 'John Doe';
+    if (profileNameEl) profileNameEl.textContent = profile.name || profile.displayName || 'John Doe';
     if (profileEmailEl) profileEmailEl.textContent = profile.email || 'john.doe@mail.com';
     
+    // Update avatar image in UI if photoURL exists
+    const profileAvatar = document.querySelector('.profile-avatar');
+    if (profileAvatar) {
+      if (profile.photoURL) {
+        profileAvatar.innerHTML = `<img src="${profile.photoURL}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+      } else {
+        profileAvatar.innerHTML = `<i data-lucide="user" id="profileAvatarIcon"></i>`;
+        if (window.lucide) lucide.createIcons();
+      }
+    }
+
     // Update menu values
     const profPersonalVal = document.getElementById('profPersonalVal');
     if (profPersonalVal) {
@@ -1623,12 +1914,19 @@ function updateProfileDisplay() {
 }
 
 window.showProfileEditModal = function(focusFieldId = null) {
-  const profileData = localStorage.getItem('purescan_user_profile');
-  if (!profileData) return;
+  let profile = null;
+  if (PureFirebase.auth.currentUser && PureFirebase.currentUserProfile) {
+    profile = PureFirebase.currentUserProfile;
+  } else {
+    const profileData = localStorage.getItem('purescan_user_profile');
+    if (profileData) {
+      try { profile = JSON.parse(profileData); } catch(e) {}
+    }
+  }
+  if (!profile) return;
   
   try {
-    const profile = JSON.parse(profileData);
-    document.getElementById('editName').value = profile.name || '';
+    document.getElementById('editName').value = profile.name || profile.displayName || '';
     document.getElementById('editEmail').value = profile.email || '';
     document.getElementById('editAge').value = profile.age || '';
     document.getElementById('editGoal').value = profile.goal || 'Maintain Health';
@@ -1653,6 +1951,148 @@ window.showProfileEditModal = function(focusFieldId = null) {
   }
 };
 
+// Sync preferences (Theme, Lang, UI theme) from profile document
+function syncPreferencesFromProfile() {
+  if (!PureFirebase.currentUserProfile) return;
+  const profile = PureFirebase.currentUserProfile;
+  const settings = profile.settings || {};
+
+  // Theme
+  if (settings.theme) {
+    AppState.currentTheme = settings.theme;
+    document.documentElement.setAttribute('data-theme', AppState.currentTheme);
+  }
+
+  // Language
+  if (settings.lang) {
+    AppState.currentLang = settings.lang;
+    applyLanguage();
+  }
+
+  // UI Theme
+  if (settings.uiTheme) {
+    document.documentElement.setAttribute('data-ui-theme', settings.uiTheme);
+    if (DOM.uiThemeBtns) {
+      DOM.uiThemeBtns.forEach(b => b.classList.remove('active'));
+      const activeBtn = document.querySelector(`.ui-theme-btn[data-theme-val="${settings.uiTheme}"]`);
+      if (activeBtn) activeBtn.classList.add('active');
+    }
+    const activeLabel = document.getElementById('activeUiLabel');
+    if (activeLabel) {
+      if (settings.uiTheme === 'neumorphic') activeLabel.textContent = 'Neumorphic 3D';
+      else if (settings.uiTheme === 'vibrant') activeLabel.textContent = 'Vibrant Glass';
+      else activeLabel.textContent = 'Default Glass';
+    }
+  }
+}
+
+// ----------------------------------------------------
+// LOCAL STORAGE MIGRATION TO FIRESTORE
+// ----------------------------------------------------
+async function migrateLocalStorageToFirebase(uid) {
+  const migrationKey = `ps_migrated_${uid}`;
+  if (localStorage.getItem(migrationKey) === '1') {
+    return;
+  }
+
+  console.log("[PureScan] Checking for localStorage data to migrate for uid:", uid);
+  
+  // 1. Migrate user profile
+  const localProfileData = localStorage.getItem('purescan_user_profile');
+  if (localProfileData) {
+    try {
+      const localProfile = JSON.parse(localProfileData);
+      const currentProfile = await PureFirebase.loadUserProfile(uid);
+      if (currentProfile) {
+        const updatedProfile = {
+          name: currentProfile.name || localProfile.name || '',
+          email: currentProfile.email || localProfile.email || '',
+          gender: currentProfile.gender || localProfile.gender || 'Male',
+          age: currentProfile.age || localProfile.age || 25,
+          goal: currentProfile.goal || localProfile.goal || 'Maintain Health',
+          activity: currentProfile.activity || localProfile.activity || 'Active'
+        };
+        await PureFirebase.updateProfile(updatedProfile);
+      }
+      console.log("[PureScan] Profile data migrated.");
+    } catch (e) {
+      console.error("Failed to migrate profile:", e);
+    }
+  }
+
+  // 2. Migrate scan history
+  const localHistoryData = localStorage.getItem(CONFIG.HISTORY_KEY);
+  if (localHistoryData) {
+    try {
+      const localHistory = JSON.parse(localHistoryData);
+      if (Array.isArray(localHistory) && localHistory.length > 0) {
+        console.log(`[PureScan] Migrating ${localHistory.length} history items to Firestore...`);
+        for (const item of localHistory) {
+          const analysis = item.data || item.analysis;
+          if (analysis) {
+            await PureFirebase.saveScan(analysis);
+          }
+        }
+      }
+      console.log("[PureScan] History data migrated.");
+    } catch (e) {
+      console.error("Failed to migrate history:", e);
+    }
+  }
+
+  // 3. Migrate Chat History
+  const localChatData = localStorage.getItem('purescan_chat_history');
+  if (localChatData) {
+    try {
+      const localChats = JSON.parse(localChatData);
+      if (Array.isArray(localChats) && localChats.length > 0) {
+        await PureFirebase.saveChatHistory(localChats);
+      }
+      console.log("[PureScan] Chat history migrated.");
+    } catch (e) {
+      console.error("Failed to migrate chat history:", e);
+    }
+  }
+
+  // 4. Migrate BMI Data
+  const localBmiData = localStorage.getItem('purescan_bmi');
+  if (localBmiData) {
+    try {
+      const bmi = JSON.parse(localBmiData);
+      if (bmi.weight && bmi.height) {
+        await PureFirebase.saveBmiData(bmi.weight, bmi.height);
+      }
+      console.log("[PureScan] BMI data migrated.");
+    } catch (e) {
+      console.error("Failed to migrate BMI data:", e);
+    }
+  }
+
+  // 5. Migrate Daily Tip Index
+  const localTipIndex = localStorage.getItem('purescan_tip_index');
+  if (localTipIndex !== null) {
+    try {
+      const idx = parseInt(localTipIndex);
+      if (!isNaN(idx)) {
+        await PureFirebase.saveDailyTip(idx);
+      }
+      console.log("[PureScan] Daily tip index migrated.");
+    } catch (e) {
+      console.error("Failed to migrate daily tip index:", e);
+    }
+  }
+
+  // Mark as migrated and remove old local key dependencies
+  localStorage.setItem(migrationKey, '1');
+  localStorage.removeItem('purescan_user_profile');
+  localStorage.removeItem(CONFIG.HISTORY_KEY);
+  localStorage.removeItem('purescan_chat_history');
+  localStorage.removeItem('purescan_bmi');
+  localStorage.removeItem('purescan_tip_index');
+  
+  console.log("[PureScan] LocalStorage migration complete. Removed old keys.");
+}
+
 // ==========================================
 // INITIALIZATION
 // ==========================================
@@ -1672,45 +2112,143 @@ function init() {
     lucide.createIcons();
   }
 
-  // Check if user has visited before
-  const hasVisited = localStorage.getItem('ps_onboarded');
-  const profileSaved = localStorage.getItem('purescan_user_profile');
+  // Check if first-time user for onboarding flow
+  const hasOnboardedLocal = localStorage.getItem('ps_onboarding_completed') === '1';
 
-  if (hasVisited && profileSaved) {
-    // Returning user with profile → skip splash & how-it-works, go direct to home
-    updateProfileDisplay();
-    navigateTo('inputScreen');
-    renderHistory();
-  } else if (hasVisited && !profileSaved) {
-    // Visited but somehow no profile -> register screen
-    navigateTo('registerScreen');
-  } else {
-    // First-time user → show full onboarding flow
-    setTimeout(() => {
-      document.getElementById('splashScreen').classList.add('active');
-    }, 100);
+  // Synchronously activate loading mode on the splash screen for returning visitors
+  // to avoid showing onboarding buttons during Firebase Auth initialization.
+  if (hasOnboardedLocal) {
+    const splashScreen = document.getElementById('splashScreen');
+    if (splashScreen) {
+      splashScreen.classList.add('loading-mode');
+    }
   }
 
-  // Show Update Modal if not seen yet
-  const hasSeenUpdate = localStorage.getItem('ps_seen_update_1.0.1');
-  if (!hasSeenUpdate) {
+  // Firebase Authentication State Listener
+  PureFirebase.auth.onAuthStateChanged(async (user) => {
+    if (user) {
+      console.log("[PureScan] User authenticated:", user.uid);
+      try {
+        await PureFirebase.loadUserProfile(user.uid);
+        await migrateLocalStorageToFirebase(user.uid);
+        syncPreferencesFromProfile();
+        updateProfileDisplay();
+        
+        AppState.historyCache = await PureFirebase.getHistory();
+        
+        navigateTo('inputScreen');
+        renderHistory();
+        
+        if (window.PureHealthModules) {
+          window.PureHealthModules.initChatFromHistory();
+          window.PureHealthModules.initBMI();
+          window.PureHealthModules.initDailyTip();
+        }
+
+        // Sync onboarding completed state to local cache if needed
+        const profile = PureFirebase.currentUserProfile;
+        if (profile && profile.settings) {
+          if (profile.settings.onboardingCompleted === true && !hasOnboardedLocal) {
+            localStorage.setItem('ps_onboarding_completed', '1');
+          } else if (profile.settings.onboardingCompleted !== true && hasOnboardedLocal) {
+            await PureFirebase.saveSetting('onboardingCompleted', true);
+          }
+        }
+
+        // Trigger v1.1.0 update modal check
+        checkAndShowUpdateModal();
+      } catch (e) {
+        console.error("Error setting up authenticated user details:", e);
+        showError("Failed to load user profile: " + e.message);
+      }
+    } else {
+      console.log("[PureScan] No active user session.");
+      // Clear local states
+      AppState.historyCache = [];
+      updateProfileDisplay();
+      
+      if (window.PureHealthModules) {
+        window.PureHealthModules.initChatFromHistory();
+        window.PureHealthModules.initBMI();
+        window.PureHealthModules.initDailyTip();
+      }
+      
+      if (!hasOnboardedLocal) {
+        // Show Splash onboarding flow for first-time visitor
+        setTimeout(() => {
+          document.getElementById('splashScreen').classList.add('active');
+        }, 100);
+      } else {
+        // Show login screen
+        navigateTo('registerScreen');
+        // Trigger v1.1.0 update modal check for returning guests
+        checkAndShowUpdateModal();
+      }
+    }
+  });
+
+  // Check and show the What's New update modal
+  function checkAndShowUpdateModal() {
+    const hasSeenUpdateLocal = localStorage.getItem('ps_seen_update_1.1.0') === '1';
+    let hasSeenUpdateCloud = false;
+
+    if (PureFirebase.currentUserProfile && PureFirebase.currentUserProfile.settings) {
+      hasSeenUpdateCloud = PureFirebase.currentUserProfile.settings.seenUpdateV110 === true;
+    }
+
+    // If already seen either locally or in cloud, do not show
+    if (hasSeenUpdateLocal || hasSeenUpdateCloud) {
+      // Sync state if authenticated and mismatch exists
+      if (PureFirebase.currentUserProfile && !hasSeenUpdateCloud && hasSeenUpdateLocal) {
+        PureFirebase.saveSetting('seenUpdateV110', true).catch(err => {
+          console.warn("[PureScan] Failed to sync seen update to cloud:", err.message);
+        });
+      } else if (PureFirebase.currentUserProfile && hasSeenUpdateCloud && !hasSeenUpdateLocal) {
+        localStorage.setItem('ps_seen_update_1.1.0', '1');
+      }
+      return;
+    }
+
+    // Display the update modal
     const updateModal = document.getElementById('updateModal');
     const btnCloseUpdate = document.getElementById('btnCloseUpdate');
+    const btnReleaseNotes = document.getElementById('btnReleaseNotes');
+
     if (updateModal && btnCloseUpdate) {
       setTimeout(() => {
         updateModal.style.display = 'flex';
         if (window.lucide) lucide.createIcons();
-      }, 800); // Small delay for premium UX feel
+      }, 1000); // 1s delay for premium UX feel
 
-      btnCloseUpdate.addEventListener('click', () => {
+      const markAsSeen = async () => {
         updateModal.style.display = 'none';
-        localStorage.setItem('ps_seen_update_1.0.1', '1');
-      });
-      
+        localStorage.setItem('ps_seen_update_1.1.0', '1');
+        if (PureFirebase.currentUserProfile) {
+          try {
+            await PureFirebase.saveSetting('seenUpdateV110', true);
+            console.log("[PureScan] Saved seen update preference to Firestore");
+          } catch (err) {
+            console.warn("[PureScan] Failed to save update preference to Firestore:", err.message);
+          }
+        }
+      };
+
+      btnCloseUpdate.addEventListener('click', markAsSeen);
+
+      if (btnReleaseNotes) {
+        btnReleaseNotes.addEventListener('click', async () => {
+          await markAsSeen();
+          const aboutModal = document.getElementById('aboutModal');
+          if (aboutModal) {
+            aboutModal.style.display = 'flex';
+            if (window.lucide) lucide.createIcons();
+          }
+        });
+      }
+
       updateModal.addEventListener('click', (e) => {
         if (e.target === updateModal) {
-          updateModal.style.display = 'none';
-          localStorage.setItem('ps_seen_update_1.0.1', '1');
+          markAsSeen();
         }
       });
     }

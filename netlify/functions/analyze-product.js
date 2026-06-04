@@ -90,20 +90,45 @@ function getGroqKeys() {
  * Detect if input contains a barcode number (8-13 digit numeric string)
  */
 function extractBarcode(input) {
-  const match = input.match(/\b(\d{8,13})\b/);
+  const match = input.match(/\b(\d{8,14})\b/);
   return match ? match[1] : null;
 }
 
-async function searchProduct(productName) {
+/**
+ * Check if string is a pure barcode numeric identifier
+ */
+function isBarcode(str) {
+  return /^\d{8,14}$/.test(str.trim());
+}
+
+/**
+ * Fetch product details from Open Food Facts API (no key required)
+ */
+async function fetchFromOpenFoodFacts(barcode) {
+  try {
+    const response = await fetch(`https://world.openfoodfacts.org/api/v2/product/${barcode}.json`, {
+      headers: {
+        'User-Agent': 'PureScan - Web - v1.1.0'
+      },
+      signal: AbortSignal.timeout(5000)
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      if (data.status === 1 && data.product) {
+        console.log(`[PureScan] OFF match found: ${data.product.product_name || 'Unnamed'}`);
+        return data.product;
+      }
+    }
+  } catch (err) {
+    console.warn(`[PureScan] OFF barcode lookup failed for ${barcode}:`, err.message);
+  }
+  return null;
+}
+
+async function searchProduct(searchQuery) {
   const keys = getSerperKeys();
   const errors = [];
-
-  const barcode = extractBarcode(productName);
-  // Optimized strictly to exactly ONE API call using combined query parameters. (No fallback)
-  const searchQuery = `${productName} food product ingredients nutrition brand details India`;
-  if (barcode) {
-    console.log(`[PureScan] Barcode detected: ${barcode}`);
-  }
 
   for (let i = 0; i < keys.length; i++) {
     try {
@@ -138,12 +163,31 @@ async function searchProduct(productName) {
 // ==========================================
 // GROQ AI ANALYSIS (with 5-key failover)
 // ==========================================
-async function analyzeWithAI(productName, searchData, targetLanguage) {
-  // Build context from search results
+async function analyzeWithAI(productName, searchData, targetLanguage, barcodeNum = null, offData = null) {
+  // Build context from search results and Open Food Facts
   let context = '';
+  
+  if (barcodeNum) {
+    context += `Scanned Barcode Number: ${barcodeNum}\n\n`;
+  }
+  
+  if (offData) {
+    context += `Open Food Facts Database Entry:\n`;
+    context += `Product Name: ${offData.product_name || offData.product_name_en || ''}\n`;
+    context += `Brand/Manufacturer: ${offData.brands || ''}\n`;
+    if (offData.ingredients_text || offData.ingredients_text_en) {
+      context += `Ingredients List: ${offData.ingredients_text || offData.ingredients_text_en}\n`;
+    }
+    if (offData.nutriments) {
+      context += `Nutritional Values (100g): ${JSON.stringify(offData.nutriments)}\n`;
+    }
+    context += `\n`;
+  }
+
   if (searchData) {
+    context += `Google Web Search Results:\n`;
     if (searchData.organic) {
-      context = searchData.organic.map(r =>
+      context += searchData.organic.map(r =>
         `Title: ${r.title}\nSnippet: ${r.snippet || ''}\nLink: ${r.link || ''}`
       ).join('\n\n');
     }
@@ -225,7 +269,7 @@ IMPORTANT RULES:
 - Focus on the Indian market context
 - Do NOT be lenient — expose marketing tricks honestly
 - Include at least 5 ingredients in the breakdown
-- If a barcode number is provided, identify the product from the search results and analyze it
+- CRITICAL BARCODE MATCHING RULE: If a barcode number is provided, you MUST carefully verify the web search results and database entries to ensure they belong to the product corresponding to that exact barcode. If the results are ambiguous or don't match, search your knowledge base for the product with that barcode. Do not return ingredients or information for a completely different product. Under "productName", return the correct name of the product matching the barcode.
 
 🔥 STRICT LANGUAGE RULE: 
 You MUST respond EXCLUSIVELY in ${targetLanguage}.
@@ -314,25 +358,56 @@ exports.handler = async function (event) {
 
   try {
     const body = JSON.parse(event.body || '{}');
-    const { productName, targetLanguage = 'English' } = body;
+    const { productName, barcode, targetLanguage = 'English' } = body;
 
-    if (!productName || typeof productName !== 'string' || productName.trim().length === 0) {
+    const cleanBarcode = barcode ? String(barcode).trim() : null;
+    const cleanName = productName ? productName.trim().substring(0, 200) : '';
+
+    if (!cleanBarcode && (!cleanName || cleanName.length === 0)) {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ error: 'Product name is required' })
+        body: JSON.stringify({ error: 'Product name or barcode is required' })
       };
     }
 
-    const cleanName = productName.trim().substring(0, 200); // Limit length
+    let searchData = null;
+    let offData = null;
+    let barcodeNum = cleanBarcode || (isBarcode(cleanName) ? cleanName : null);
+    let resolvedProductName = cleanName;
 
-    // Step 1: Search product info via SERPER
-    console.log(`[PureScan] Searching for: ${cleanName}`);
-    const searchData = await searchProduct(cleanName);
+    // Detect if input is a pure barcode numeric identifier
+    if (barcodeNum) {
+      console.log(`[PureScan] Barcode detected for analysis: ${barcodeNum}`);
+      
+      // Try Open Food Facts database lookup first
+      offData = await fetchFromOpenFoodFacts(barcodeNum);
+      if (offData) {
+        resolvedProductName = offData.product_name || offData.product_name_en || cleanName;
+        if (offData.brands) {
+          resolvedProductName = `${offData.brands} ${resolvedProductName}`;
+        }
+        console.log(`[PureScan] Barcode resolved via OFF to product: ${resolvedProductName}`);
+        
+        // Search Serper with the resolved brand + product name
+        const searchQuery = `${resolvedProductName} food product ingredients nutrition brand details India`;
+        console.log(`[PureScan] Searching Google Serper with OFF name: ${searchQuery}`);
+        searchData = await searchProduct(searchQuery);
+      } else {
+        // Fallback: search Serper directly with just the barcode number
+        console.log(`[PureScan] OFF not found, searching Serper directly with barcode: ${barcodeNum}`);
+        searchData = await searchProduct(barcodeNum);
+      }
+    } else {
+      // Normal text search
+      const searchQuery = `${cleanName} food product ingredients nutrition brand details India`;
+      console.log(`[PureScan] Searching Google Serper with text: ${searchQuery}`);
+      searchData = await searchProduct(searchQuery);
+    }
 
     // Step 2: Analyze with GROQ AI
     console.log(`[PureScan] Analyzing with AI...`);
-    const analysis = await analyzeWithAI(cleanName, searchData, targetLanguage);
+    const analysis = await analyzeWithAI(resolvedProductName, searchData, targetLanguage, barcodeNum, offData);
 
     if (!analysis) {
       return {
@@ -342,6 +417,15 @@ exports.handler = async function (event) {
           error: 'AI analysis failed. All API keys exhausted or service unavailable.'
         })
       };
+    }
+
+    // Add metadata/integrity properties
+    if (barcodeNum) {
+      analysis.barcode = barcodeNum;
+    }
+    if (offData && resolvedProductName) {
+      // Hard override to guarantee 100% brand/name alignment with scanned barcode
+      analysis.productName = resolvedProductName;
     }
 
     // Return successful analysis

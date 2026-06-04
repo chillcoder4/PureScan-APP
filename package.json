@@ -1,10 +1,10 @@
 {
   "name": "purescan",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "PureScan - Listen to Science, Not Marketing",
   "scripts": {
-    "start": "netlify dev --functions netlify/functions",
-    "build": "echo 'No build step required for frontend'"
+    "start": "node generate-firebase-config.js && netlify dev --functions netlify/functions",
+    "build": "node generate-firebase-config.js"
   },
   "devDependencies": {
     "netlify-cli": "^17.38.1"

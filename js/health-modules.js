@@ -1712,9 +1712,9 @@
   }
 
   // ==========================================
-  // CHAT HISTORY (localStorage)
+  // CHAT HISTORY (localStorage / Firestore)
   // ==========================================
-  function saveChatHistory() {
+  async function saveChatHistory() {
     const msgs = document.querySelectorAll('#psChatMessages .ps-chat-msg');
     const history = [];
     msgs.forEach(msg => {
@@ -1725,20 +1725,43 @@
     });
     // Keep last 50 messages
     const trimmed = history.slice(-50);
-    try {
-      localStorage.setItem(PS_CHAT_HISTORY_KEY, JSON.stringify(trimmed));
-    } catch (e) {
-      // localStorage full — clear old data
-      localStorage.removeItem(PS_CHAT_HISTORY_KEY);
+    if (typeof PureFirebase !== 'undefined' && PureFirebase.auth.currentUser) {
+      try {
+        await PureFirebase.saveChatHistory(trimmed);
+      } catch (e) {
+        console.error('Failed to save chat history to Firestore:', e);
+      }
+    } else {
+      try {
+        localStorage.setItem(PS_CHAT_HISTORY_KEY, JSON.stringify(trimmed));
+      } catch (e) {
+        // localStorage full — clear old data
+        localStorage.removeItem(PS_CHAT_HISTORY_KEY);
+      }
     }
   }
 
-  function initChatFromHistory() {
+  async function initChatFromHistory() {
     try {
-      const saved = JSON.parse(localStorage.getItem(PS_CHAT_HISTORY_KEY));
-      if (!saved || saved.length === 0) return;
+      let saved = null;
+      if (typeof PureFirebase !== 'undefined' && PureFirebase.auth.currentUser) {
+        saved = await PureFirebase.getChatHistory();
+      } else {
+        const localData = localStorage.getItem(PS_CHAT_HISTORY_KEY);
+        if (localData) {
+          saved = JSON.parse(localData);
+        }
+      }
 
       const messagesContainer = document.getElementById('psChatMessages');
+      if (!messagesContainer) return;
+
+      if (!saved || saved.length === 0) {
+        messagesContainer.innerHTML = '';
+        addAIWelcomeMessage();
+        return;
+      }
+
       messagesContainer.innerHTML = ''; // Clear welcome message
 
       saved.forEach(item => {
@@ -1761,10 +1784,15 @@
 
       // Hide suggestions if there's history
       const suggestions = document.getElementById('psChatSuggestions');
-      if (suggestions && saved.length > 2) suggestions.style.display = 'none';
+      if (suggestions) {
+        if (saved.length > 2) suggestions.style.display = 'none';
+        else suggestions.style.display = 'flex';
+      }
+
+      if (window.lucide) lucide.createIcons();
 
     } catch (e) {
-      // Invalid data — ignore
+      console.warn("Failed to load chat history:", e);
     }
   }
 
@@ -1774,8 +1802,12 @@
   function initDailyTip() {
     let tipIndex = 0;
     try {
-      const saved = localStorage.getItem(PS_DAILY_TIP_KEY);
-      if (saved !== null) tipIndex = parseInt(saved) || 0;
+      if (typeof PureFirebase !== 'undefined' && PureFirebase.auth.currentUser && PureFirebase.currentUserProfile) {
+        tipIndex = parseInt(PureFirebase.currentUserProfile.dailyTipIndex) || 0;
+      } else {
+        const saved = localStorage.getItem(PS_DAILY_TIP_KEY);
+        if (saved !== null) tipIndex = parseInt(saved) || 0;
+      }
     } catch (e) {}
 
     const container = document.getElementById('psDailyTipContent');
@@ -1794,24 +1826,24 @@
       </div>
     `).join('');
 
-    renderDailyTip(tipIndex);
+    renderDailyTip(tipIndex, false);
 
     // Dots click
     document.querySelectorAll('.ps-tip-dot').forEach(dot => {
       dot.addEventListener('click', () => {
         const idx = parseInt(dot.getAttribute('data-tip'));
-        renderDailyTip(idx);
+        renderDailyTip(idx, true);
       });
     });
 
     // Auto-rotate every 8 seconds
     setInterval(() => {
       tipIndex = (tipIndex + 1) % DAILY_TIPS.length;
-      renderDailyTip(tipIndex);
+      renderDailyTip(tipIndex, false);
     }, 8000);
   }
 
-  function renderDailyTip(index) {
+  function renderDailyTip(index, saveToCloud = false) {
     if (!DAILY_TIPS[index]) return;
 
     // Toggle visibility of pre-rendered tips instead of re-rendering HTML
@@ -1827,6 +1859,9 @@
 
     try {
       localStorage.setItem(PS_DAILY_TIP_KEY, index.toString());
+      if (saveToCloud && typeof PureFirebase !== 'undefined' && PureFirebase.auth.currentUser) {
+        PureFirebase.saveDailyTip(index).catch(e => console.error("Error saving daily tip:", e));
+      }
     } catch (e) {}
   }
 
@@ -1839,15 +1874,33 @@
 
     // Load saved BMI
     try {
-      const saved = JSON.parse(localStorage.getItem(PS_BMI_KEY));
-      if (saved) {
-        document.getElementById('psBmiWeight').value = saved.weight;
-        document.getElementById('psBmiHeight').value = saved.height;
-        calculateBMI(saved.weight, saved.height, false);
+      let weight = null;
+      let height = null;
+      if (typeof PureFirebase !== 'undefined' && PureFirebase.auth.currentUser && PureFirebase.currentUserProfile) {
+        weight = PureFirebase.currentUserProfile.bmiWeight || null;
+        height = PureFirebase.currentUserProfile.bmiHeight || null;
+      } else {
+        const saved = JSON.parse(localStorage.getItem(PS_BMI_KEY));
+        if (saved) {
+          weight = saved.weight;
+          height = saved.height;
+        }
+      }
+
+      if (weight && height) {
+        document.getElementById('psBmiWeight').value = weight;
+        document.getElementById('psBmiHeight').value = height;
+        calculateBMI(weight, height, false);
+      } else {
+        document.getElementById('psBmiWeight').value = '';
+        document.getElementById('psBmiHeight').value = '';
+        const result = document.getElementById('psBmiResult');
+        if (result) result.classList.remove('ps-bmi-visible');
+        drawBmiGauge(10);
       }
     } catch (e) {}
 
-    calcBtn.addEventListener('click', () => {
+    calcBtn.addEventListener('click', async () => {
       const weight = parseFloat(document.getElementById('psBmiWeight').value);
       const height = parseFloat(document.getElementById('psBmiHeight').value);
 
@@ -1858,9 +1911,17 @@
 
       calculateBMI(weight, height, true);
 
-      try {
-        localStorage.setItem(PS_BMI_KEY, JSON.stringify({ weight, height }));
-      } catch (e) {}
+      if (typeof PureFirebase !== 'undefined' && PureFirebase.auth.currentUser) {
+        try {
+          await PureFirebase.saveBmiData(weight, height);
+        } catch (e) {
+          console.error("Failed to save BMI data to Firestore:", e);
+        }
+      } else {
+        try {
+          localStorage.setItem(PS_BMI_KEY, JSON.stringify({ weight, height }));
+        } catch (e) {}
+      }
     });
 
     // Theme toggle re-draw hook
@@ -2381,6 +2442,13 @@
     });
     checkNavVisibility();
   }
+
+  // Expose global hooks for syncing user data on login/logout
+  window.PureHealthModules = {
+    initChatFromHistory: initChatFromHistory,
+    initBMI: initBMI,
+    initDailyTip: initDailyTip
+  };
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => setTimeout(observeScreens, 300));

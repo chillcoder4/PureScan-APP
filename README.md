@@ -207,6 +207,15 @@ The app requires these API keys. **NEVER put them in frontend code.**
 - **Search:** Serper.dev (Google Search API)
 - **Deployment:** Netlify
 
+## 📈 Release History
+
+### v1.1.0 (Minor Release)
+* **Firebase Cloud Integration**: Added Firebase Auth (secure email-password login & register), Firestore scoped collections (`/users`, `/userProfiles`, `/scanHistory`, `/chatHistory`), and Firebase Storage `/profile_photos` integration.
+* **Auto Migration**: Added automatic data migration logic from old local storage keys to FireStore upon first login.
+* **What's New Modal**: Integrated a premium What's New first-launch popup synced with user profiles.
+* **Barcode Alignment Fix**: Added Open Food Facts direct database queries and strict LLM alignment instructions to eliminate barcode mismatch errors.
+* **Security & Scalability**: Deployed robust Firestore/Storage security rules and configured Firestore composite indexes.
+
 ---
 
 Made with ❤️ in India

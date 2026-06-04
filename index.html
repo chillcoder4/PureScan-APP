@@ -89,6 +89,11 @@
           <span class="stat-label" data-i18n="userRating">User Rating</span>
         </div>
       </div>
+      <!-- Splash Loader (shown in loading-mode for returning visitors) -->
+      <div id="splashLoader" class="splash-loader" style="display: none; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; margin-top: 2rem;">
+        <div class="spinner" style="width: 36px; height: 36px; border: 3px solid rgba(14, 165, 233, 0.1); border-top: 3px solid var(--accent-primary); border-radius: 50%; animation: ps-spin 1s linear infinite;"></div>
+        <p style="font-size: 0.9rem; color: var(--text-secondary); font-weight: 500; font-family: var(--font-display);">Securing session...</p>
+      </div>
     </div>
     <div class="splash-bg-orbs">
       <div class="orb orb-1"></div>
@@ -143,27 +148,54 @@
   <!-- ===== SCREEN 2.5: ONBOARDING / PROFILE REGISTRATION ===== -->
   <section id="registerScreen" class="screen">
     <div class="screen-content">
-      <div class="logo-wrapper" style="margin-top: 2rem; margin-bottom: 2rem; display: flex; flex-direction: column; align-items: center; text-align: center;">
+      <div class="logo-wrapper" style="margin-top: 2rem; margin-bottom: 1.5rem; display: flex; flex-direction: column; align-items: center; text-align: center;">
         <div class="logo-icon" style="width: 64px; height: 64px; border-radius: var(--radius-full); background: var(--accent-glow); display: flex; align-items: center; justify-content: center; border: 1px solid var(--accent-primary);">
-          <i data-lucide="user-plus" style="width: 32px; height: 32px; color: var(--accent-primary);"></i>
+          <i id="authLogoIcon" data-lucide="log-in" style="width: 32px; height: 32px; color: var(--accent-primary);"></i>
         </div>
-        <h2 class="section-title" style="margin-top: 1rem; font-family: var(--font-display); font-weight: 800; font-size: 1.75rem;" data-i18n="createProfile">Create Profile</h2>
-        <p class="section-sub" style="color: var(--text-secondary); margin-top: 0.25rem;" data-i18n="createProfileSub">Set up your health goals and personal details</p>
+        <h2 id="authScreenTitle" class="section-title" style="margin-top: 1rem; font-family: var(--font-display); font-weight: 800; font-size: 1.75rem;">Login to PureScan</h2>
+        <p id="authScreenSub" class="section-sub" style="color: var(--text-secondary); margin-top: 0.25rem;">Access your safe food assistant</p>
       </div>
 
-      <form id="formRegister" class="glass-card" style="width: 100%; padding: 2rem; border-radius: var(--radius-lg); display: flex; flex-direction: column; gap: 1.5rem; background: var(--bg-card); border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); margin-bottom: 2rem;">
-        <div class="form-group" style="display: flex; flex-direction: column; gap: 0.5rem;">
-          <label for="regName" style="font-weight: 600; font-size: 0.9rem; color: var(--text-primary);" data-i18n="fullName">Full Name</label>
-          <input type="text" id="regName" placeholder="Enter your name" style="width: 100%; padding: 0.85rem 1.1rem; background: var(--bg-primary); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); color: var(--text-primary); outline: none; transition: border-color var(--transition-fast);" required>
+      <form id="formRegister" class="glass-card" style="width: 100%; padding: 2rem; border-radius: var(--radius-lg); display: flex; flex-direction: column; gap: 1.25rem; background: var(--bg-card); border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); margin-bottom: 2rem;">
+        
+        <!-- Auth Type Selection Tabs -->
+        <div id="authTabsToggle" class="auth-tabs" style="display: flex; gap: 0.5rem; background: var(--bg-primary); padding: 0.25rem; border-radius: var(--radius-sm); border: 1px solid var(--glass-border);">
+          <button type="button" id="authTabLogin" class="auth-tab active" style="flex: 1; padding: 0.6rem; border-radius: var(--radius-sm); border: none; background: transparent; color: var(--text-primary); font-weight: 600; cursor: pointer; transition: all var(--transition-fast);">Login</button>
+          <button type="button" id="authTabRegister" class="auth-tab" style="flex: 1; padding: 0.6rem; border-radius: var(--radius-sm); border: none; background: transparent; color: var(--text-secondary); font-weight: 600; cursor: pointer; transition: all var(--transition-fast);">Register</button>
         </div>
 
-        <div class="form-group" style="display: flex; flex-direction: column; gap: 0.5rem;">
-          <label for="regEmail" style="font-weight: 600; font-size: 0.9rem; color: var(--text-primary);" data-i18n="emailAddress">Email Address</label>
-          <input type="email" id="regEmail" placeholder="your.email@mail.com" style="width: 100%; padding: 0.85rem 1.1rem; background: var(--bg-primary); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); color: var(--text-primary); outline: none; transition: border-color var(--transition-fast);">
+        <!-- Full Name (Register Only) -->
+        <div class="form-group register-only-field" style="display: none; flex-direction: column; gap: 0.5rem;">
+          <label for="regName" style="font-weight: 600; font-size: 0.9rem; color: var(--text-primary);">Full Name</label>
+          <input type="text" id="regName" placeholder="Enter your name" style="width: 100%; padding: 0.85rem 1.1rem; background: var(--bg-primary); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); color: var(--text-primary); outline: none; transition: border-color var(--transition-fast);">
         </div>
 
+        <!-- Email (All modes) -->
         <div class="form-group" style="display: flex; flex-direction: column; gap: 0.5rem;">
-          <label style="font-weight: 600; font-size: 0.9rem; color: var(--text-primary);" data-i18n="gender">Gender</label>
+          <label for="regEmail" style="font-weight: 600; font-size: 0.9rem; color: var(--text-primary);">Email Address</label>
+          <input type="email" id="regEmail" placeholder="your.email@mail.com" style="width: 100%; padding: 0.85rem 1.1rem; background: var(--bg-primary); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); color: var(--text-primary); outline: none; transition: border-color var(--transition-fast);" required>
+        </div>
+
+        <!-- Password (Login/Register modes) -->
+        <div class="form-group auth-password-field" style="display: flex; flex-direction: column; gap: 0.5rem;">
+          <label for="regPassword" style="font-weight: 600; font-size: 0.9rem; color: var(--text-primary);">Password</label>
+          <input type="password" id="regPassword" placeholder="••••••••" style="width: 100%; padding: 0.85rem 1.1rem; background: var(--bg-primary); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); color: var(--text-primary); outline: none; transition: border-color var(--transition-fast);" required>
+        </div>
+
+        <!-- Confirm Password (Register Only) -->
+        <div class="form-group register-only-field" style="display: none; flex-direction: column; gap: 0.5rem;">
+          <label for="regConfirmPassword" style="font-weight: 600; font-size: 0.9rem; color: var(--text-primary);">Confirm Password</label>
+          <input type="password" id="regConfirmPassword" placeholder="••••••••" style="width: 100%; padding: 0.85rem 1.1rem; background: var(--bg-primary); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); color: var(--text-primary); outline: none; transition: border-color var(--transition-fast);">
+        </div>
+
+        <!-- Forgot Password Link (Login Only) -->
+        <div class="form-group login-only-field" style="display: flex; justify-content: flex-end; margin-top: -0.5rem;">
+          <button type="button" id="btnForgotPassword" style="background: none; border: none; color: var(--accent-primary); font-size: 0.85rem; font-weight: 600; cursor: pointer; outline: none;">Forgot Password?</button>
+        </div>
+
+        <!-- Gender (Register Only) -->
+        <div class="form-group register-only-field" style="display: none; flex-direction: column; gap: 0.5rem;">
+          <label style="font-weight: 600; font-size: 0.9rem; color: var(--text-primary);">Gender</label>
           <div class="gender-selection" style="display: flex; gap: 0.75rem;">
             <button type="button" class="gender-btn active" data-gender="Male" style="flex: 1; padding: 0.85rem; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); color: var(--text-primary); cursor: pointer; transition: all var(--transition-fast); font-weight: 600;">Male</button>
             <button type="button" class="gender-btn" data-gender="Female" style="flex: 1; padding: 0.85rem; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); color: var(--text-primary); cursor: pointer; transition: all var(--transition-fast); font-weight: 600;">Female</button>
@@ -171,13 +203,15 @@
           </div>
         </div>
 
-        <div class="form-group" style="display: flex; flex-direction: column; gap: 0.5rem;">
-          <label for="regAge" style="font-weight: 600; font-size: 0.9rem; color: var(--text-primary);" data-i18n="age">Age</label>
-          <input type="number" id="regAge" placeholder="Age" min="5" max="120" style="width: 100%; padding: 0.85rem 1.1rem; background: var(--bg-primary); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); color: var(--text-primary); outline: none; transition: border-color var(--transition-fast);" required>
+        <!-- Age (Register Only) -->
+        <div class="form-group register-only-field" style="display: none; flex-direction: column; gap: 0.5rem;">
+          <label for="regAge" style="font-weight: 600; font-size: 0.9rem; color: var(--text-primary);">Age</label>
+          <input type="number" id="regAge" placeholder="Age" min="5" max="120" style="width: 100%; padding: 0.85rem 1.1rem; background: var(--bg-primary); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); color: var(--text-primary); outline: none; transition: border-color var(--transition-fast);">
         </div>
 
-        <div class="form-group" style="display: flex; flex-direction: column; gap: 0.5rem;">
-          <label for="regGoal" style="font-weight: 600; font-size: 0.9rem; color: var(--text-primary);" data-i18n="healthGoal">Health Goal</label>
+        <!-- Goal (Register Only) -->
+        <div class="form-group register-only-field" style="display: none; flex-direction: column; gap: 0.5rem;">
+          <label for="regGoal" style="font-weight: 600; font-size: 0.9rem; color: var(--text-primary);">Health Goal</label>
           <select id="regGoal" style="width: 100%; padding: 0.85rem 1.1rem; background: var(--bg-primary); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); color: var(--text-primary); outline: none; transition: border-color var(--transition-fast); cursor: pointer; font-weight: 500;">
             <option value="Weight Loss">Weight Loss</option>
             <option value="Weight Gain">Weight Gain</option>
@@ -186,8 +220,9 @@
           </select>
         </div>
 
-        <div class="form-group" style="display: flex; flex-direction: column; gap: 0.5rem;">
-          <label for="regActivity" style="font-weight: 600; font-size: 0.9rem; color: var(--text-primary);" data-i18n="activityLevel">Activity Level</label>
+        <!-- Activity (Register Only) -->
+        <div class="form-group register-only-field" style="display: none; flex-direction: column; gap: 0.5rem;">
+          <label for="regActivity" style="font-weight: 600; font-size: 0.9rem; color: var(--text-primary);">Activity Level</label>
           <select id="regActivity" style="width: 100%; padding: 0.85rem 1.1rem; background: var(--bg-primary); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); color: var(--text-primary); outline: none; transition: border-color var(--transition-fast); cursor: pointer; font-weight: 500;">
             <option value="Sedentary">Sedentary (No Exercise)</option>
             <option value="Active" selected>Active (Regular Workout)</option>
@@ -195,10 +230,18 @@
           </select>
         </div>
 
+        <!-- Submit Button -->
         <button type="submit" id="btnRegisterSubmit" class="btn btn-primary btn-glow" style="width: 100%; margin-top: 0.5rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.9rem;">
-          <span data-i18n="completeRegistration">Complete Setup</span>
-          <i data-lucide="check"></i>
+          <span id="btnAuthText">Log In</span>
+          <i id="btnAuthIcon" data-lucide="log-in"></i>
         </button>
+
+        <!-- Back to Login Link (Forgot Password Only) -->
+        <div id="backToLoginContainer" style="display: none; text-align: center;">
+          <button type="button" id="btnBackToLogin" style="background: none; border: none; color: var(--text-secondary); font-size: 0.85rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 0.25rem; outline: none;">
+            <i data-lucide="arrow-left" style="width: 14px; height: 14px;"></i> Back to Login
+          </button>
+        </div>
       </form>
     </div>
   </section>
@@ -415,10 +458,11 @@
     <div class="ps-panel-body" style="padding: 1rem 1.25rem;">
       <!-- Profile Card -->
       <div class="profile-card glass-card" style="cursor: pointer;">
-        <div class="profile-avatar-container">
-          <div class="profile-avatar">
-            <i data-lucide="user"></i>
+        <div class="profile-avatar-container" style="position: relative;">
+          <div class="profile-avatar" id="btnTriggerAvatarUpload" style="position: relative; overflow: hidden;">
+            <i data-lucide="user" id="profileAvatarIcon"></i>
           </div>
+          <input type="file" id="avatarFileInput" accept="image/*" style="display: none;">
           <button class="btn-choose-photo" style="display: none !important;">Choose Photo</button>
         </div>
         <div class="profile-info-container">
@@ -502,6 +546,15 @@
             <span>About PureScan</span>
           </div>
           <i data-lucide="chevron-right"></i>
+        </div>
+        <div class="profile-menu-divider"></div>
+        
+        <div class="profile-menu-item" id="profLogout" style="color: var(--red);">
+          <div class="profile-menu-left">
+            <i data-lucide="log-out" style="color: var(--red);"></i>
+            <span style="color: var(--red);">Logout</span>
+          </div>
+          <i data-lucide="chevron-right" style="color: var(--red);"></i>
         </div>
       </div>
     </div>
@@ -768,7 +821,7 @@
         </div>
         <h3>Pure<span class="logo-accent">Scan</span></h3>
         <p class="about-tagline" data-i18n="aboutTagline">Listen to Science, Not Marketing.</p>
-        <span class="about-version">v1.0.1</span>
+        <span class="about-version">v1.1.0</span>
       </div>
 
       <p class="about-desc" data-i18n="aboutDesc">PureScan is an AI-powered transparency app that exposes the hidden truth behind misleading food labels and empowers every Indian household to make smarter, healthier decisions.</p>
@@ -886,36 +939,52 @@
               <div class="lang-btn-name">Vibrant Glass</div>
               <div class="lang-btn-code">Motion Animated</div>
             </div>
-          </div>
+      <!-- ===== UPDATE / RELEASE NOTES MODAL ===== -->
+  <div id="updateModal" class="modal" style="display:none; justify-content: center; align-items: center; z-index: var(--z-modal);">
+    <div class="modal-content glass-card" style="max-width: 450px; width: 90%; padding: 2.25rem 2rem; border-radius: var(--radius-lg); background: var(--bg-secondary); border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); position: relative; text-align: center;">
+      <div style="background: rgba(14, 165, 233, 0.1); border: 1px solid var(--accent-primary); width: 60px; height: 60px; border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem auto;">
+        <i data-lucide="sparkles" style="color: var(--accent-primary); width: 28px; height: 28px;"></i>
+      </div>
+      <h3 style="font-family: var(--font-display); font-weight: 800; font-size: 1.5rem; margin-bottom: 0.25rem; color: var(--accent-primary);">🎉 Welcome to PureScan v1.1.0</h3>
+      <span style="background: rgba(16, 185, 129, 0.15); color: #10b981; padding: 0.25rem 0.75rem; border-radius: var(--radius-full); font-size: 0.8rem; font-weight: 700; display: inline-block; margin-bottom: 1.25rem;">New Version Released</span>
+      
+      <!-- What's New List -->
+      <div style="text-align: left; background: var(--bg-primary); border: 1px solid var(--glass-border); padding: 1.25rem; border-radius: var(--radius-md); margin-bottom: 1.5rem; font-size: 0.85rem; line-height: 1.6; color: var(--text-secondary); max-height: 250px; overflow-y: auto;">
+        <p style="margin-bottom: 0.75rem; font-weight: 600; color: var(--text-primary);">What's New in this release:</p>
+        <ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 0.6rem;">
+          <li style="display: flex; align-items: flex-start; gap: 0.5rem;"><span style="color: #10b981;">✅</span> <span><strong>Firebase Cloud Sync</strong>: Sync your history & profile to the cloud securely.</span></li>
+          <li style="display: flex; align-items: flex-start; gap: 0.5rem;"><span style="color: #10b981;">✅</span> <span><strong>Secure User Accounts</strong>: Restrict access to your private search history.</span></li>
+          <li style="display: flex; align-items: flex-start; gap: 0.5rem;"><span style="color: #10b981;">✅</span> <span><strong>Login & Registration</strong>: Seamless registration and email-password authentication.</span></li>
+          <li style="display: flex; align-items: flex-start; gap: 0.5rem;"><span style="color: #10b981;">✅</span> <span><strong>Cloud Profile Storage</strong>: Store age, goals, activity level & upload custom profile avatars.</span></li>
+          <li style="display: flex; align-items: flex-start; gap: 0.5rem;"><span style="color: #10b981;">✅</span> <span><strong>Cross-Device Data Sync</strong>: Log in from any phone or PC to access your details instantly.</span></li>
+          <li style="display: flex; align-items: flex-start; gap: 0.5rem;"><span style="color: #10b981;">✅</span> <span><strong>Improved Barcode Accuracy</strong>: Direct Open Food Facts database resolution for barcodes.</span></li>
+          <li style="display: flex; align-items: flex-start; gap: 0.5rem;"><span style="color: #10b981;">✅</span> <span><strong>Better History Management</strong>: Scoped Firestore transactions for clearing history.</span></li>
+          <li style="display: flex; align-items: flex-start; gap: 0.5rem;"><span style="color: #10b981;">✅</span> <span><strong>Improved Security</strong>: Firestore & Firebase Storage granular access rules.</span></li>
+          <li style="display: flex; align-items: flex-start; gap: 0.5rem;"><span style="color: #10b981;">✅</span> <span><strong>Performance Improvements</strong>: Lazy loading modules and optimized bundle flows.</span></li>
+          <li style="display: flex; align-items: flex-start; gap: 0.5rem;"><span style="color: #10b981;">✅</span> <span><strong>Bug Fixes</strong>: Resolved camera freezes and scanner downscaling errors.</span></li>
+        </ul>
+      </div>
+
+      <!-- Action Buttons -->
+      <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+        <button id="btnCloseUpdate" class="btn btn-primary btn-glow" style="width: 100%; padding: 0.85rem; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+          <span>Continue</span>
+          <i data-lucide="check"></i>
+        </button>
+        <button id="btnReleaseNotes" class="btn" style="width: 100%; padding: 0.85rem; font-weight: 600; background: var(--glass-bg); border: 1px solid var(--glass-border); color: var(--text-primary); cursor: pointer; transition: all var(--transition-fast); display: flex; align-items: center; justify-content: center; gap: 0.5rem; border-radius: var(--radius-sm);">
+          <span>View Release Notes</span>
+          <i data-lucide="external-link" style="width: 16px; height: 16px;"></i>
         </button>
       </div>
     </div>
   </div>
 
-  <!-- ===== UPDATE / RELEASE NOTES MODAL ===== -->
-  <div id="updateModal" class="modal" style="display:none; justify-content: center; align-items: center; z-index: var(--z-modal);">
-    <div class="modal-content glass-card" style="max-width: 400px; width: 90%; padding: 2.25rem 2rem; border-radius: var(--radius-lg); background: var(--bg-secondary); border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); position: relative; text-align: center;">
-      <div style="background: rgba(14, 165, 233, 0.1); border: 1px solid var(--accent-primary); width: 60px; height: 60px; border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem auto;">
-        <i data-lucide="sparkles" style="color: var(--accent-primary); width: 28px; height: 28px;"></i>
-      </div>
-      <h3 style="font-family: var(--font-display); font-weight: 800; font-size: 1.5rem; margin-bottom: 0.25rem; color: var(--accent-primary);">PureScan Updated!</h3>
-      <span style="background: rgba(14, 165, 233, 0.15); color: var(--accent-primary); padding: 0.25rem 0.75rem; border-radius: var(--radius-full); font-size: 0.8rem; font-weight: 700; display: inline-block; margin-bottom: 1.25rem;">v1.0.1 — Bug Fixes</span>
-      
-      <!-- Multilingual details inside popup -->
-      <div style="text-align: left; background: var(--bg-primary); border: 1px solid var(--glass-border); padding: 1.25rem; border-radius: var(--radius-md); margin-bottom: 1.5rem; font-size: 0.85rem; line-height: 1.6; color: var(--text-secondary);">
-        <p style="margin-bottom: 0.75rem; font-weight: 600; color: var(--text-primary);">What's Fixed:</p>
-        <ul style="margin: 0; padding-left: 1.15rem; display: flex; flex-direction: column; gap: 0.5rem;">
-          <li><strong>Photo Scanner Fix</strong>: Barcode detection from uploaded photos is now highly accurate via canvas downscale optimization.</li>
-          <li><strong>Camera Scanner Fix</strong>: Camera resource freezes are resolved; scanner stops properly when navigation switches or panel closes.</li>
-        </ul>
-      </div>
-
-      <button id="btnCloseUpdate" class="btn btn-primary btn-glow" style="width: 100%; padding: 0.85rem; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
-        <span>Get Started</span>
-        <i data-lucide="arrow-right"></i>
-      </button>
-    </div>
-  </div>
+  <!-- Firebase SDK Compat -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
 
   <script src="js/translations.js?v=12"></script>
   <script src="js/script.js?v=12"></script>
