@@ -66,6 +66,9 @@ function cacheDOMElements() {
   // How It Works
   DOM.btnContinue = document.getElementById('btnContinue');
 
+  // Register / Login
+  DOM.btnContinueAsGuest = document.getElementById('btnContinueAsGuest');
+
   // Input Screen
   DOM.productSearchInput = document.getElementById('productSearchInput');
   DOM.searchSuggestions = document.getElementById('searchSuggestions');
@@ -1429,6 +1432,15 @@ function bindEvents() {
     navigateTo('registerScreen');
   });
 
+  if (DOM.btnContinueAsGuest) {
+    DOM.btnContinueAsGuest.addEventListener('click', () => {
+      localStorage.setItem('ps_guest_mode', '1');
+      localStorage.removeItem('ps_user_logged_in');
+      navigateTo('inputScreen');
+      renderHistory();
+    });
+  }
+
   // Auth Hub state switching
   let authCurrentState = 'login'; // 'login', 'register', 'forgot'
 
@@ -1659,18 +1671,27 @@ function bindEvents() {
     });
   }
 
-  // Logout Trigger
+  // Logout / Register Trigger
   const profLogout = document.getElementById('profLogout');
   if (profLogout) {
     profLogout.addEventListener('click', async () => {
-      if (confirm("Are you sure you want to log out?")) {
-        try {
-          await PureFirebase.logout();
-          const panel = document.getElementById('psProfilePanel');
-          if (panel) panel.classList.remove('ps-panel-open');
-        } catch (e) {
-          showError("Logout failed: " + e.message);
+      if (PureFirebase.auth && PureFirebase.auth.currentUser) {
+        if (confirm("Are you sure you want to log out?")) {
+          try {
+            await PureFirebase.logout();
+            localStorage.removeItem('ps_guest_mode'); // Clear guest mode cache on explicit logout
+            const panel = document.getElementById('psProfilePanel');
+            if (panel) panel.classList.remove('ps-panel-open');
+          } catch (e) {
+            showError("Logout failed: " + e.message);
+          }
         }
+      } else {
+        // Guest user clicks "Login / Register"
+        const panel = document.getElementById('psProfilePanel');
+        if (panel) panel.classList.remove('ps-panel-open');
+        localStorage.removeItem('ps_guest_mode'); // Clear guest mode cache so they go to registerScreen
+        navigateTo('registerScreen');
       }
     });
   }
@@ -1865,7 +1886,8 @@ function bindEvents() {
 // ==========================================
 function updateProfileDisplay() {
   let profile = null;
-  if (PureFirebase.auth.currentUser && PureFirebase.currentUserProfile) {
+  const isAuth = !!(PureFirebase.auth && PureFirebase.auth.currentUser);
+  if (isAuth && PureFirebase.currentUserProfile) {
     profile = PureFirebase.currentUserProfile;
   } else {
     const profileData = localStorage.getItem('purescan_user_profile');
@@ -1873,19 +1895,18 @@ function updateProfileDisplay() {
       try { profile = JSON.parse(profileData); } catch(e) {}
     }
   }
-  if (!profile) return;
   
   try {
     // Update Profile Panel Card
     const profileNameEl = document.querySelector('#psProfilePanel .profile-name');
     const profileEmailEl = document.querySelector('#psProfilePanel .profile-email');
-    if (profileNameEl) profileNameEl.textContent = profile.name || profile.displayName || 'John Doe';
-    if (profileEmailEl) profileEmailEl.textContent = profile.email || 'john.doe@mail.com';
+    if (profileNameEl) profileNameEl.textContent = profile ? (profile.name || profile.displayName || 'Guest User') : 'Guest User';
+    if (profileEmailEl) profileEmailEl.textContent = profile ? (profile.email || '—') : '—';
     
     // Update avatar image in UI if photoURL exists
     const profileAvatar = document.querySelector('.profile-avatar');
     if (profileAvatar) {
-      if (profile.photoURL) {
+      if (profile && profile.photoURL) {
         profileAvatar.innerHTML = `<img src="${profile.photoURL}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
       } else {
         profileAvatar.innerHTML = `<i data-lucide="user" id="profileAvatarIcon"></i>`;
@@ -1896,18 +1917,45 @@ function updateProfileDisplay() {
     // Update menu values
     const profPersonalVal = document.getElementById('profPersonalVal');
     if (profPersonalVal) {
-      profPersonalVal.textContent = `${profile.age || '—'} yrs, ${profile.gender || 'Male'}`;
+      profPersonalVal.textContent = profile ? `${profile.age || '—'} yrs, ${profile.gender || 'Male'}` : '—';
     }
     
     const profGoalsVal = document.getElementById('profGoalsVal');
     if (profGoalsVal) {
-      profGoalsVal.textContent = profile.goal || 'Maintain Health';
+      profGoalsVal.textContent = profile ? (profile.goal || 'Maintain Health') : 'Maintain Health';
     }
     
     const profActivityVal = document.getElementById('profActivityVal');
     if (profActivityVal) {
-      profActivityVal.textContent = profile.activity || 'Active';
+      profActivityVal.textContent = profile ? (profile.activity || 'Active') : 'Active';
     }
+
+    // Dynamic adjustment of the Logout menu item for Guests vs Logged-in users
+    const profLogout = document.getElementById('profLogout');
+    if (profLogout) {
+      const leftPart = profLogout.querySelector('.profile-menu-left');
+      if (isAuth) {
+        // Authenticated User: Show Logout in red
+        profLogout.style.color = 'var(--red)';
+        if (leftPart) {
+          leftPart.innerHTML = `
+            <i data-lucide="log-out" style="color: var(--red);"></i>
+            <span style="color: var(--red);">Logout</span>
+          `;
+        }
+      } else {
+        // Guest User: Show Login / Register in accent color
+        profLogout.style.color = 'var(--accent-primary)';
+        if (leftPart) {
+          leftPart.innerHTML = `
+            <i data-lucide="log-in" style="color: var(--accent-primary);"></i>
+            <span style="color: var(--accent-primary);">Login / Register</span>
+          `;
+        }
+      }
+      if (window.lucide) lucide.createIcons();
+    }
+
   } catch(e) {
     console.error('Error updating profile display:', e);
   }
@@ -2114,20 +2162,53 @@ function init() {
 
   // Check if first-time user for onboarding flow
   const hasOnboardedLocal = localStorage.getItem('ps_onboarding_completed') === '1';
+  const wasLoggedIn = localStorage.getItem('ps_user_logged_in') === '1';
+  const isGuestMode = localStorage.getItem('ps_guest_mode') === '1';
 
   // Synchronously activate loading mode on the splash screen for returning visitors
   // to avoid showing onboarding buttons during Firebase Auth initialization.
   if (hasOnboardedLocal) {
+    if (wasLoggedIn) {
+      const splashScreen = document.getElementById('splashScreen');
+      if (splashScreen) {
+        splashScreen.classList.add('loading-mode');
+      }
+    } else if (isGuestMode) {
+      // If returning guest who chose guest bypass, go straight to main screen
+      navigateTo('inputScreen');
+    } else {
+      // If returning guest who hasn't chosen guest bypass, go straight to login
+      navigateTo('registerScreen');
+    }
+  }
+
+  // Safety check: Fallback if Firebase fails to load
+  if (typeof PureFirebase === 'undefined' || !PureFirebase.auth) {
+    console.warn("[PureScan] Firebase not available. Falling back to local guest mode.");
     const splashScreen = document.getElementById('splashScreen');
     if (splashScreen) {
-      splashScreen.classList.add('loading-mode');
+      splashScreen.classList.remove('loading-mode');
     }
+    if (!hasOnboardedLocal) {
+      setTimeout(() => {
+        document.getElementById('splashScreen').classList.add('active');
+      }, 100);
+    } else {
+      if (isGuestMode) {
+        navigateTo('inputScreen');
+      } else {
+        navigateTo('registerScreen');
+      }
+    }
+    return;
   }
 
   // Firebase Authentication State Listener
   PureFirebase.auth.onAuthStateChanged(async (user) => {
     if (user) {
       console.log("[PureScan] User authenticated:", user.uid);
+      localStorage.setItem('ps_user_logged_in', '1'); // Set login state cache
+      localStorage.removeItem('ps_guest_mode'); // Clear guest mode cache
       try {
         await PureFirebase.loadUserProfile(user.uid);
         await migrateLocalStorageToFirebase(user.uid);
@@ -2160,9 +2241,24 @@ function init() {
       } catch (e) {
         console.error("Error setting up authenticated user details:", e);
         showError("Failed to load user profile: " + e.message);
+        
+        // Remove loading-mode so the user is not stuck on a loading screen
+        const splashScreen = document.getElementById('splashScreen');
+        if (splashScreen) {
+          splashScreen.classList.remove('loading-mode');
+        }
+        navigateTo('registerScreen');
       }
     } else {
       console.log("[PureScan] No active user session.");
+      localStorage.removeItem('ps_user_logged_in'); // Clear login state cache
+      
+      // Ensure loading-mode is removed from splash screen to prevent locking
+      const splashScreen = document.getElementById('splashScreen');
+      if (splashScreen) {
+        splashScreen.classList.remove('loading-mode');
+      }
+
       // Clear local states
       AppState.historyCache = [];
       updateProfileDisplay();
@@ -2179,8 +2275,12 @@ function init() {
           document.getElementById('splashScreen').classList.add('active');
         }, 100);
       } else {
-        // Show login screen
-        navigateTo('registerScreen');
+        if (localStorage.getItem('ps_guest_mode') === '1') {
+          navigateTo('inputScreen');
+        } else {
+          // Show login screen
+          navigateTo('registerScreen');
+        }
         // Trigger v1.1.0 update modal check for returning guests
         checkAndShowUpdateModal();
       }

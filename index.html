@@ -236,6 +236,13 @@
           <i id="btnAuthIcon" data-lucide="log-in"></i>
         </button>
 
+        <!-- Continue as Guest Option -->
+        <div id="guestBypassContainer" style="text-align: center; margin-top: 0.25rem;">
+          <button type="button" id="btnContinueAsGuest" style="background: none; border: none; color: var(--text-secondary); font-size: 0.85rem; font-weight: 600; cursor: pointer; outline: none; transition: color var(--transition-fast);" onmouseover="this.style.color='var(--accent-primary)'" onmouseout="this.style.color='var(--text-secondary)'">
+            Continue as Guest
+          </button>
+        </div>
+
         <!-- Back to Login Link (Forgot Password Only) -->
         <div id="backToLoginContainer" style="display: none; text-align: center;">
           <button type="button" id="btnBackToLogin" style="background: none; border: none; color: var(--text-secondary); font-size: 0.85rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 0.25rem; outline: none;">
