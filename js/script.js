@@ -32,6 +32,7 @@ const AppState = {
   barcodeScanner: null,
   isScannerRunning: false,
   isAnalyzing: false,
+  currentUserId: null,
 };
 
 // Language code → English name map for AI prompt injection
@@ -2363,13 +2364,13 @@ function init() {
 
   console.log("[PureScan Debug] Firebase initialized.");
 
-  let authResolved = false;
+  let isStartupResolved = false;
   let authTimeoutId = null;
 
   // 2-second timeout protection callback
   function triggerAuthTimeoutFallback() {
-    if (authResolved) return;
-    authResolved = true;
+    if (isStartupResolved) return;
+    isStartupResolved = true;
     console.warn("[PureScan Debug] Auth state check timed out after 2 seconds. Proceeding to fallback.");
     
     // Remove loading spinner
@@ -2401,25 +2402,31 @@ function init() {
 
   // Firebase Authentication State Listener
   PureFirebase.auth.onAuthStateChanged(async (user) => {
-    console.log("[PureScan Debug] Auth state received:", user ? "User found" : "User not found");
-    if (authResolved) {
-      console.warn("[PureScan Debug] Auth listener fired after timeout/fallback resolved. Ignoring.");
-      return;
-    }
-    authResolved = true;
+    console.log("[PureScan Debug] Auth state received:", user ? "User found (" + user.uid + ")" : "User not found");
+    
+    const isFirstRun = !isStartupResolved;
+    isStartupResolved = true;
     if (authTimeoutId) {
       clearTimeout(authTimeoutId);
+      authTimeoutId = null;
     }
 
     if (user) {
-      console.log("[PureScan Debug] User found: " + user.uid);
+      // Prevent duplicate processing if listener fires again for the same user
+      if (AppState.currentUserId === user.uid) {
+        console.log("[PureScan Debug] User already processed. Skipping.");
+        return;
+      }
+      AppState.currentUserId = user.uid;
+
+      console.log("[PureScan Debug] Processing logged-in user...");
       localStorage.setItem('ps_user_logged_in', '1'); // Set login state cache
       localStorage.removeItem('ps_guest_mode'); // Clear guest mode cache
       
-      // Navigate to main screen immediately (under 2 seconds) to avoid blocking the UI
+      // Navigate to main screen
       navigateTo('inputScreen');
       renderHistory();
-      console.log("[PureScan Debug] App startup completed.");
+      console.log("[PureScan Debug] App startup/login completed.");
 
       // Now run Firestore loads and migrations asynchronously in the background
       (async () => {
@@ -2479,7 +2486,8 @@ function init() {
       })();
 
     } else {
-      console.log("[PureScan Debug] User not found.");
+      console.log("[PureScan Debug] Processing logged-out state.");
+      AppState.currentUserId = null;
       localStorage.removeItem('ps_user_logged_in'); // Clear login state cache
       
       // Ensure loading-mode is removed from splash screen to prevent locking
@@ -2498,25 +2506,34 @@ function init() {
         window.PureHealthModules.initDailyTip();
       }
       
-      if (!hasOnboardedLocal) {
-        // Show Splash onboarding flow for first-time visitor
-        setTimeout(() => {
-          document.getElementById('splashScreen').classList.add('active');
-          if (typeof showLanguageModal === 'function') {
-            showLanguageModal();
+      if (isFirstRun) {
+        if (!hasOnboardedLocal) {
+          // Show Splash onboarding flow for first-time visitor
+          setTimeout(() => {
+            document.getElementById('splashScreen').classList.add('active');
+            if (typeof showLanguageModal === 'function') {
+              showLanguageModal();
+            }
+          }, 100);
+        } else {
+          if (localStorage.getItem('ps_guest_mode') === '1') {
+            navigateTo('inputScreen');
+          } else {
+            // Show login screen
+            navigateTo('registerScreen');
           }
-        }, 100);
+          // Trigger v1.1.0 update modal check for returning guests
+          checkAndShowUpdateModal();
+        }
+        console.log("[PureScan Debug] App startup completed.");
       } else {
+        // Explicit logout or state change to logged out
         if (localStorage.getItem('ps_guest_mode') === '1') {
           navigateTo('inputScreen');
         } else {
-          // Show login screen
           navigateTo('registerScreen');
         }
-        // Trigger v1.1.0 update modal check for returning guests
-        checkAndShowUpdateModal();
       }
-      console.log("[PureScan Debug] App startup completed.");
     }
   });
 

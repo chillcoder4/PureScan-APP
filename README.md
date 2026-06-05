@@ -209,6 +209,12 @@ The app requires these API keys. **NEVER put them in frontend code.**
 
 ## 📈 Release History
 
+### v1.1.1 (Hotfix Release)
+* **Auth & Session Repair**: Resolved critical registration/login UI hangs caused by auth state resolution deadlocks on page reload.
+* **Onboarding & Guest Session Stabilization**: Refined the initial session restoration pipeline to enforce a strict 2-second timeout, allowing immediate guest bypassing without locking on "Securing session...".
+* **Profile Fallbacks**: Implemented fallback displayName generation in `PureFirebase.register` using email split string methods to prevent any "Unknown" profiles.
+* **Firestore Query Consolidation**: Parallelized background fetches to load user profiles and history cache concurrently, saving network round-trips.
+
 ### v1.1.0 (Minor Release)
 * **Firebase Cloud Integration**: Added Firebase Auth (secure email-password login & register), Firestore scoped collections (`/users`, `/userProfiles`, `/scanHistory`, `/chatHistory`), and Firebase Storage `/profile_photos` integration.
 * **Auto Migration**: Added automatic data migration logic from old local storage keys to FireStore upon first login.

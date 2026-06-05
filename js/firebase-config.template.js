@@ -31,16 +31,19 @@ const PureFirebase = {
     const userCredential = await this.auth.createUserWithEmailAndPassword(email, password);
     const uid = userCredential.user.uid;
 
+    // Fallback logic for display name to prevent "Unknown" profiles
+    const name = (profileData.name && profileData.name.trim()) ? profileData.name.trim() : (email.split('@')[0] || 'User');
+
     // Send profile display name to Auth
     await userCredential.user.updateProfile({
-      displayName: profileData.name
+      displayName: name
     });
 
     const completeProfile = {
       uid: uid,
       email: email,
-      displayName: profileData.name,
-      name: profileData.name,
+      displayName: name,
+      name: name,
       photoURL: null,
       gender: profileData.gender || 'Male',
       age: profileData.age || 25,
