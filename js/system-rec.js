@@ -14,38 +14,110 @@
 // ──────────────────────────────────────────────
 // 1. GLOBAL ON/OFF SWITCH
 // ──────────────────────────────────────────────
-const SYSRECTION_ENABLED = false;   // ← Change to false to hide all sysrections instantly
-
+const SYSRECTION_ENABLED = false; // ← Change to false to hide all sysrections instantly
 
 // ──────────────────────────────────────────────
 // 2. CONFIGURATION
 // ──────────────────────────────────────────────
 const SYSREC_CONFIG = {
-  COOLDOWN_MS:        90000,            // 1 min 30 seconds cooldown after user closes sysrec
-  SLIDE_INTERVAL_MS:  4500,             // Auto-slide every 4.5 seconds
-  TRANSITION_MS:      400,              // Slide fade duration (ms)
-  STORAGE_KEY:        'purescan_sysrec_closed_at',
-  CLICK_LOG_KEY:      'purescan_sysrec_clicks',
-  BANNER_ID:          'sysrecTopBanner',
-  FLOAT_ID:           'sysrecFloatCard',
+  COOLDOWN_MS: 90000, // 1 min 30 seconds cooldown after user closes sysrec
+  SLIDE_INTERVAL_MS: 4500, // Auto-slide every 4.5 seconds
+  TRANSITION_MS: 400, // Slide fade duration (ms)
+  STORAGE_KEY: "purescan_sysrec_closed_at",
+  CLICK_LOG_KEY: "purescan_sysrec_clicks",
+  BANNER_ID: "sysrecTopBanner",
+  FLOAT_ID: "sysrecFloatCard",
 
   // Keywords that classify a search as food/health-related
   // (used for conditional display — Requirement 9)
   FOOD_KEYWORDS: [
-    'noodles','biscuit','cookie','juice','milk','oats','cereal','protein',
-    'chips','snack','chocolate','drink','energy','health','food','diet',
-    'sugar','oil','sauce','ketchup','butter','bread','rice','wheat',
-    'breakfast','nutrition','fiber','vitamin','supplement','weight','muscle',
-    'recovery','granola','muesli','bar','glucose','honey','jam','spread',
-    'cola','soda','tea','coffee','powder','shake','whey','organic','natural',
-    'maggi','bournvita','horlicks','complan','kurkure','haldiram','tropicana',
-    'parle','britannia','amul','nestle','cadbury','lays','pepsi','sprite',
-    'tang','frooti','maaza','glucon','chyawanprash','saffola','fortune',
-    'redbull','sting','real','paperboat','patanjali','yippee','kissan','heinz',
-    'nutella','oreo','bourbon','monaco','marigold','hideseek','kitkat'
-  ]
+    "noodles",
+    "biscuit",
+    "cookie",
+    "juice",
+    "milk",
+    "oats",
+    "cereal",
+    "protein",
+    "chips",
+    "snack",
+    "chocolate",
+    "drink",
+    "energy",
+    "health",
+    "food",
+    "diet",
+    "sugar",
+    "oil",
+    "sauce",
+    "ketchup",
+    "butter",
+    "bread",
+    "rice",
+    "wheat",
+    "breakfast",
+    "nutrition",
+    "fiber",
+    "vitamin",
+    "supplement",
+    "weight",
+    "muscle",
+    "recovery",
+    "granola",
+    "muesli",
+    "bar",
+    "glucose",
+    "honey",
+    "jam",
+    "spread",
+    "cola",
+    "soda",
+    "tea",
+    "coffee",
+    "powder",
+    "shake",
+    "whey",
+    "organic",
+    "natural",
+    "maggi",
+    "bournvita",
+    "horlicks",
+    "complan",
+    "kurkure",
+    "haldiram",
+    "tropicana",
+    "parle",
+    "britannia",
+    "amul",
+    "nestle",
+    "cadbury",
+    "lays",
+    "pepsi",
+    "sprite",
+    "tang",
+    "frooti",
+    "maaza",
+    "glucon",
+    "chyawanprash",
+    "saffola",
+    "fortune",
+    "redbull",
+    "sting",
+    "real",
+    "paperboat",
+    "patanjali",
+    "yippee",
+    "kissan",
+    "heinz",
+    "nutella",
+    "oreo",
+    "bourbon",
+    "monaco",
+    "marigold",
+    "hideseek",
+    "kitkat",
+  ],
 };
-
 
 // ──────────────────────────────────────────────
 // 3. SYSRECTIONS DATA ARRAY
@@ -53,60 +125,65 @@ const SYSREC_CONFIG = {
 // ──────────────────────────────────────────────
 const sysrections = [
   {
-    id:          'goatlife_1',
-    title:       'GOAT Life Overnight Oats (Assorted Pack)',
-    description: 'High-protein overnight oats — no added sugar, supports muscle recovery & weight management.',
-    tagline:     '"Healthy Breakfast, Simplified"',
-    image:       'https://m.media-amazon.com/images/I/71LMqFJajkL.jpg',
-    link:        'https://goatlife.co.in/',
-    amazonLink:  'https://amzn.in/d/6AxTY0z',
-    tag:         '⭐ Recommended',
-    brand:       'GOAT Life',
-    cta:         'Shop Now',
-    categories:  ['food', 'health', 'protein', 'breakfast']
+    id: "goatlife_1",
+    title: "GOAT Life Overnight Oats (Assorted Pack)",
+    description:
+      "High-protein overnight oats — no added sugar, supports muscle recovery & weight management.",
+    tagline: '"Healthy Breakfast, Simplified"',
+    image: "https://m.media-amazon.com/images/I/71LMqFJajkL.jpg",
+    link: "https://goatlife.co.in/",
+    amazonLink: "https://amzn.in/d/6AxTY0z",
+    tag: "⭐ Recommended",
+    brand: "GOAT Life",
+    cta: "Shop Now",
+    categories: ["food", "health", "protein", "breakfast"],
   },
 
   {
-    id:          'goatlife_2',
-    title:       'GOAT Life Chocolate Overnight Oats',
-    description: 'Chocolate-flavored protein oats — tasty & healthy breakfast alternative.',
-    tagline:     '"Taste meets Nutrition"',
-    image:       'https://m.media-amazon.com/images/I/71d0wtpbxJL.jpg',
-    link:        'https://goatlife.co.in/',
-    amazonLink:  'https://amzn.in/d/6AxTY0z',
-    tag:         '🔥 Popular',
-    brand:       'GOAT Life',
-    cta:         'Try Now',
-    categories:  ['food', 'health', 'protein', 'breakfast']
+    id: "goatlife_2",
+    title: "GOAT Life Chocolate Overnight Oats",
+    description:
+      "Chocolate-flavored protein oats — tasty & healthy breakfast alternative.",
+    tagline: '"Taste meets Nutrition"',
+    image: "https://m.media-amazon.com/images/I/71d0wtpbxJL.jpg",
+    link: "https://goatlife.co.in/",
+    amazonLink: "https://amzn.in/d/6AxTY0z",
+    tag: "🔥 Popular",
+    brand: "GOAT Life",
+    cta: "Try Now",
+    categories: ["food", "health", "protein", "breakfast"],
   },
 
   {
-    id:          'goatlife_3',
-    title:       'GOAT Life Mango Overnight Oats',
-    description: 'Fruity mango oats with fiber & protein — perfect quick morning meal.',
-    tagline:     '"Fresh Flavor Boost"',
-    image:       'https://m.media-amazon.com/images/I/711YzYLHbFS._AC_UF894,1000_QL80_.jpg',
-    link:        'https://goatlife.co.in/',
-    amazonLink:  'https://amzn.in/d/6AxTY0z',
-    tag:         '🥭 New Flavor',
-    brand:       'GOAT Life',
-    cta:         'Explore',
-    categories:  ['food', 'health', 'breakfast']
+    id: "goatlife_3",
+    title: "GOAT Life Mango Overnight Oats",
+    description:
+      "Fruity mango oats with fiber & protein — perfect quick morning meal.",
+    tagline: '"Fresh Flavor Boost"',
+    image:
+      "https://m.media-amazon.com/images/I/711YzYLHbFS._AC_UF894,1000_QL80_.jpg",
+    link: "https://goatlife.co.in/",
+    amazonLink: "https://amzn.in/d/6AxTY0z",
+    tag: "🥭 New Flavor",
+    brand: "GOAT Life",
+    cta: "Explore",
+    categories: ["food", "health", "breakfast"],
   },
 
   {
-    id:          'goatlife_4',
-    title:       'GOAT Life High Protein Oats (20g Protein)',
-    description: 'Power-packed oats with higher protein content — ideal for gym & fitness.',
-    tagline:     '"Fuel Your Performance"',
-    image:       'https://m.media-amazon.com/images/I/71LMqFJajkL.jpg',
-    link:        'https://goatlife.co.in/',
-    amazonLink:  'https://amzn.in/d/6AxTY0z',
-    tag:         '💪 High Protein',
-    brand:       'GOAT Life',
-    cta:         'Buy Now',
-    categories:  ['food', 'fitness', 'protein']
-  }
+    id: "goatlife_4",
+    title: "GOAT Life High Protein Oats (20g Protein)",
+    description:
+      "Power-packed oats with higher protein content — ideal for gym & fitness.",
+    tagline: '"Fuel Your Performance"',
+    image: "https://m.media-amazon.com/images/I/71LMqFJajkL.jpg",
+    link: "https://goatlife.co.in/",
+    amazonLink: "https://amzn.in/d/6AxTY0z",
+    tag: "💪 High Protein",
+    brand: "GOAT Life",
+    cta: "Buy Now",
+    categories: ["food", "fitness", "protein"],
+  },
 
   // ──────────────────────────────────────────
   // FUTURE COLLABORATIONS — add below this line
@@ -126,22 +203,20 @@ const sysrections = [
   // }
 ];
 
-
 // ──────────────────────────────────────────────
 // 4. INTERNAL STATE
 // ──────────────────────────────────────────────
-let _bannerIndex      = 0;
-let _floatIndex       = 0;
-let _bannerTimer      = null;
-let _floatTimer       = null;
-let _bannerViews      = 0;
-let _floatViews       = 0;
-let _bannerClosed     = false;
-let _floatClosed      = false;
+let _bannerIndex = 0;
+let _floatIndex = 0;
+let _bannerTimer = null;
+let _floatTimer = null;
+let _bannerViews = 0;
+let _floatViews = 0;
+let _bannerClosed = false;
+let _floatClosed = false;
 let _bannerInCooldown = false;
-let _floatInCooldown  = false;
-let _sysrecReady      = false;
-
+let _floatInCooldown = false;
+let _sysrecReady = false;
 
 // ──────────────────────────────────────────────
 // 5. UTILITY HELPERS
@@ -149,8 +224,11 @@ let _sysrecReady      = false;
 
 /** Check if user closed sysrec within cooldown window */
 function _isCooldownActive() {
-  const closedAt = parseInt(localStorage.getItem(SYSREC_CONFIG.STORAGE_KEY) || '0', 10);
-  return closedAt > 0 && (Date.now() - closedAt) < SYSREC_CONFIG.COOLDOWN_MS;
+  const closedAt = parseInt(
+    localStorage.getItem(SYSREC_CONFIG.STORAGE_KEY) || "0",
+    10,
+  );
+  return closedAt > 0 && Date.now() - closedAt < SYSREC_CONFIG.COOLDOWN_MS;
 }
 
 /** Save close timestamp for cooldown */
@@ -161,18 +239,22 @@ function _saveCooldown() {
 /** Track sysrec click analytics (stored in localStorage) */
 function _trackClick(sysrecId) {
   try {
-    const log = JSON.parse(localStorage.getItem(SYSREC_CONFIG.CLICK_LOG_KEY) || '{}');
+    const log = JSON.parse(
+      localStorage.getItem(SYSREC_CONFIG.CLICK_LOG_KEY) || "{}",
+    );
     log[sysrecId] = (log[sysrecId] || 0) + 1;
     log[`${sysrecId}_lastClick`] = new Date().toISOString();
     localStorage.setItem(SYSREC_CONFIG.CLICK_LOG_KEY, JSON.stringify(log));
-  } catch (e) { /* silent */ }
+  } catch (e) {
+    /* silent */
+  }
 }
 
 /** Check if a product search query is food/health related */
 function _isFoodHealthQuery(query) {
   if (!query) return false;
   const q = query.toLowerCase();
-  return SYSREC_CONFIG.FOOD_KEYWORDS.some(kw => q.includes(kw));
+  return SYSREC_CONFIG.FOOD_KEYWORDS.some((kw) => q.includes(kw));
 }
 
 /** Returns the current sysrection object (handles empty array gracefully) */
@@ -180,13 +262,12 @@ function _getPromo(index) {
   return sysrections[index % sysrections.length] || null;
 }
 
-
 // ──────────────────────────────────────────────
 // 6. CSS INJECTION
 //    All sysrec styles live here — zero extra files
 // ──────────────────────────────────────────────
 function _injectStyles() {
-  if (document.getElementById('sysrec-styles')) return;
+  if (document.getElementById("sysrec-styles")) return;
 
   const css = `
     /* ─── SYSREC BASE ─── */
@@ -669,12 +750,11 @@ function _injectStyles() {
     }
   `;
 
-  const style = document.createElement('style');
-  style.id = 'sysrec-styles';
+  const style = document.createElement("style");
+  style.id = "sysrec-styles";
   style.textContent = css;
   document.head.appendChild(style);
 }
-
 
 // ──────────────────────────────────────────────
 // 7. BUILD TOP BANNER HTML
@@ -687,10 +767,10 @@ function _buildBanner() {
   const sysrec = _getPromo(_bannerIndex);
   if (!sysrec) return;
 
-  const banner = document.createElement('div');
+  const banner = document.createElement("div");
   banner.id = SYSREC_CONFIG.BANNER_ID;
-  banner.setAttribute('role', 'banner');
-  banner.setAttribute('aria-label', 'Sponsored recommendation');
+  banner.setAttribute("role", "banner");
+  banner.setAttribute("aria-label", "Sponsored recommendation");
   banner.innerHTML = `
     <div class="sysrec-banner-inner">
       <img
@@ -701,7 +781,7 @@ function _buildBanner() {
         onerror="this.src='https://via.placeholder.com/48x48/6366f1/ffffff?text=AD'"
       >
       <div class="sysrec-banner-body">
-        <div class="sysrec-banner-tag">${sysrec.tag || 'Sponsored'}</div>
+        <div class="sysrec-banner-tag">${sysrec.tag || "Sponsored"}</div>
         <div class="sysrec-banner-title">${sysrec.title}</div>
         <div class="sysrec-banner-desc">${sysrec.description}</div>
       </div>
@@ -712,18 +792,18 @@ function _buildBanner() {
         rel="noopener sponsored"
         id="sysrecBannerCTA"
         aria-label="Visit ${sysrec.brand}"
-      >${sysrec.cta || 'Shop Now'} ↗</a>
+      >${sysrec.cta || "Shop Now"} ↗</a>
       <button class="sysrec-banner-close" id="sysrecBannerClose" aria-label="Close sysrection">✕</button>
     </div>
   `;
 
   document.body.prepend(banner);
 
-  document.getElementById('sysrecBannerCTA').addEventListener('click', () => {
+  document.getElementById("sysrecBannerCTA").addEventListener("click", () => {
     _trackClick(_getPromo(_bannerIndex)?.id);
   });
 
-  document.getElementById('sysrecBannerClose').addEventListener('click', () => {
+  document.getElementById("sysrecBannerClose").addEventListener("click", () => {
     if (window.PureScanPromo) window.PureScanPromo.close();
   });
 
@@ -733,11 +813,10 @@ function _buildBanner() {
 function _adjustBodyOffset(add) {
   const banner = document.getElementById(SYSREC_CONFIG.BANNER_ID);
   const isVisible = add && banner && !_bannerClosed && !_bannerInCooldown;
-  const offset = isVisible ? (banner.offsetHeight || 68) : 0;
-  document.body.style.transition = 'padding-top 0.35s ease';
-  document.body.style.paddingTop = offset > 0 ? offset + 'px' : '';
+  const offset = isVisible ? banner.offsetHeight || 68 : 0;
+  document.body.style.transition = "padding-top 0.35s ease";
+  document.body.style.paddingTop = offset > 0 ? offset + "px" : "";
 }
-
 
 // ──────────────────────────────────────────────
 // 8. BUILD FLOATING CARD HTML
@@ -750,8 +829,10 @@ function _buildFloatCard() {
 
   _floatIndex = Math.floor(Math.random() * sysrections.length);
 
-  const slidesHTML = sysrections.map((sysrec, i) => `
-    <div class="sysrec-float-slide ${i === _floatIndex ? 'active' : ''}" data-sysrec-id="${sysrec.id}">
+  const slidesHTML = sysrections
+    .map(
+      (sysrec, i) => `
+    <div class="sysrec-float-slide ${i === _floatIndex ? "active" : ""}" data-sysrec-id="${sysrec.id}">
       <div class="sysrec-float-img-wrap">
         <img
           class="sysrec-float-img"
@@ -760,13 +841,13 @@ function _buildFloatCard() {
           loading="lazy"
           onerror="this.src='https://via.placeholder.com/290x130/6366f1/ffffff?text=AD'"
         >
-        <div class="sysrec-float-tag">${sysrec.tag || 'Sponsored'}</div>
+        <div class="sysrec-float-tag">${sysrec.tag || "Sponsored"}</div>
       </div>
       <div class="sysrec-float-body">
         <div class="sysrec-float-brand">${sysrec.brand}</div>
         <div class="sysrec-float-title">${sysrec.title}</div>
         <div class="sysrec-float-desc">${sysrec.description}</div>
-        <div class="sysrec-float-tagline">${sysrec.tagline || ''}</div>
+        <div class="sysrec-float-tagline">${sysrec.tagline || ""}</div>
       </div>
       <div class="sysrec-float-actions">
         <a
@@ -776,8 +857,10 @@ function _buildFloatCard() {
           rel="noopener sponsored"
           data-sysrec-cta="${sysrec.id}"
           aria-label="Shop ${sysrec.brand}"
-        >🛍 ${sysrec.cta || 'Shop Now'}</a>
-        ${sysrec.amazonLink ? `
+        >🛍 ${sysrec.cta || "Shop Now"}</a>
+        ${
+          sysrec.amazonLink
+            ? `
         <a
           class="sysrec-btn-secondary"
           href="${sysrec.amazonLink}"
@@ -785,21 +868,29 @@ function _buildFloatCard() {
           rel="noopener sponsored"
           data-sysrec-cta="${sysrec.id}_amz"
           aria-label="View on Amazon"
-        >📦 Amazon</a>` : ''}
+        >📦 Amazon</a>`
+            : ""
+        }
       </div>
     </div>
-  `).join('');
+  `,
+    )
+    .join("");
 
-  const dotsHTML = sysrections.length > 1
-    ? `<div class="sysrec-float-dots">${sysrections.map((_, i) =>
-        `<button class="sysrec-dot ${i === _floatIndex ? 'active' : ''}" data-slide="${i}" aria-label="Go to slide ${i + 1}"></button>`
-      ).join('')}</div>`
-    : '';
+  const dotsHTML =
+    sysrections.length > 1
+      ? `<div class="sysrec-float-dots">${sysrections
+          .map(
+            (_, i) =>
+              `<button class="sysrec-dot ${i === _floatIndex ? "active" : ""}" data-slide="${i}" aria-label="Go to slide ${i + 1}"></button>`,
+          )
+          .join("")}</div>`
+      : "";
 
-  const card = document.createElement('div');
+  const card = document.createElement("div");
   card.id = SYSREC_CONFIG.FLOAT_ID;
-  card.setAttribute('role', 'complementary');
-  card.setAttribute('aria-label', 'Product recommendation');
+  card.setAttribute("role", "complementary");
+  card.setAttribute("aria-label", "Product recommendation");
   card.innerHTML = `
     <div class="sysrec-float-header">
       <div class="sysrec-float-label">Recommended for You</div>
@@ -813,23 +904,24 @@ function _buildFloatCard() {
 
   document.body.appendChild(card);
 
-  card.querySelectorAll('[data-sysrec-cta]').forEach(el => {
-    el.addEventListener('click', () => _trackClick(el.getAttribute('data-sysrec-cta')));
+  card.querySelectorAll("[data-sysrec-cta]").forEach((el) => {
+    el.addEventListener("click", () =>
+      _trackClick(el.getAttribute("data-sysrec-cta")),
+    );
   });
 
-  document.getElementById('sysrecFloatClose').addEventListener('click', () => {
+  document.getElementById("sysrecFloatClose").addEventListener("click", () => {
     if (window.PureScanPromo) window.PureScanPromo.close();
   });
 
-  card.querySelectorAll('.sysrec-dot').forEach(dot => {
-    dot.addEventListener('click', () => {
-      _goToFloatSlide(parseInt(dot.getAttribute('data-slide'), 10));
+  card.querySelectorAll(".sysrec-dot").forEach((dot) => {
+    dot.addEventListener("click", () => {
+      _goToFloatSlide(parseInt(dot.getAttribute("data-slide"), 10));
       _stopFloatSlider();
-      _startFloatSlider(); 
+      _startFloatSlider();
     });
   });
 }
-
 
 // ──────────────────────────────────────────────
 // 9. INDEPENDENT SLIDER ENGINES
@@ -840,32 +932,33 @@ function _updateBannerUI() {
   const sysrec = _getPromo(_bannerIndex);
   if (!sysrec) return;
 
-  const img = banner.querySelector('.sysrec-banner-img');
-  const title = banner.querySelector('.sysrec-banner-title');
-  const desc = banner.querySelector('.sysrec-banner-desc');
-  const cta = banner.querySelector('.sysrec-banner-cta');
-  
-  if (img)   img.src = sysrec.image;
+  const img = banner.querySelector(".sysrec-banner-img");
+  const title = banner.querySelector(".sysrec-banner-title");
+  const desc = banner.querySelector(".sysrec-banner-desc");
+  const cta = banner.querySelector(".sysrec-banner-cta");
+
+  if (img) img.src = sysrec.image;
   if (title) title.textContent = sysrec.title;
-  if (desc)  desc.textContent = sysrec.description;
+  if (desc) desc.textContent = sysrec.description;
   if (cta) {
     cta.href = sysrec.link;
-    cta.textContent = `${sysrec.cta || 'Shop Now'} ↗`;
+    cta.textContent = `${sysrec.cta || "Shop Now"} ↗`;
   }
 }
 
 function _goToFloatSlide(index) {
   if (!sysrections.length) return;
-  _floatIndex = ((index % sysrections.length) + sysrections.length) % sysrections.length;
+  _floatIndex =
+    ((index % sysrections.length) + sysrections.length) % sysrections.length;
 
   const card = document.getElementById(SYSREC_CONFIG.FLOAT_ID);
   if (!card) return;
 
-  card.querySelectorAll('.sysrec-float-slide').forEach((slide, i) => {
-    slide.classList.toggle('active', i === _floatIndex);
+  card.querySelectorAll(".sysrec-float-slide").forEach((slide, i) => {
+    slide.classList.toggle("active", i === _floatIndex);
   });
-  card.querySelectorAll('.sysrec-dot').forEach((dot, i) => {
-    dot.classList.toggle('active', i === _floatIndex);
+  card.querySelectorAll(".sysrec-dot").forEach((dot, i) => {
+    dot.classList.toggle("active", i === _floatIndex);
   });
 }
 
@@ -876,10 +969,11 @@ function _startBannerSlider() {
     _bannerIndex = (_bannerIndex + 1) % sysrections.length;
     _updateBannerUI();
     _bannerViews++;
-    if (_bannerViews >= (sysrections.length * 2)) { // Rotate all items 2 times before cooldown
-      _triggerCooldown('banner');
+    if (_bannerViews >= sysrections.length * 2) {
+      // Rotate all items 2 times before cooldown
+      _triggerCooldown("banner");
     }
-  }, 4500); 
+  }, 4500);
 }
 
 function _startFloatSlider() {
@@ -887,26 +981,32 @@ function _startFloatSlider() {
   if (_floatTimer) return; // Already running, do not restart
   // Bottom Float only shows 1 item, so it stays for 10 seconds then cooldown starts
   _floatTimer = setTimeout(() => {
-    _triggerCooldown('float');
+    _triggerCooldown("float");
   }, 10000);
 }
 
 function _stopBannerSlider() {
-  if (_bannerTimer) { clearInterval(_bannerTimer); _bannerTimer = null; }
+  if (_bannerTimer) {
+    clearInterval(_bannerTimer);
+    _bannerTimer = null;
+  }
 }
 function _stopFloatSlider() {
-  if (_floatTimer) { clearTimeout(_floatTimer); _floatTimer = null; }
+  if (_floatTimer) {
+    clearTimeout(_floatTimer);
+    _floatTimer = null;
+  }
 }
 
 function _triggerCooldown(which) {
   _hidePromoSilent(which);
-  if (which === 'banner') {
+  if (which === "banner") {
     _bannerInCooldown = true;
     _stopBannerSlider();
     setTimeout(() => {
       _bannerInCooldown = false;
       _bannerViews = 0;
-      if (!_bannerClosed) _showPromo('banner');
+      if (!_bannerClosed) _showPromo("banner");
     }, 30000); // 30 sec cooldown
   } else {
     _floatInCooldown = true;
@@ -916,44 +1016,62 @@ function _triggerCooldown(which) {
       _floatViews = 0;
       // Pick next random slide for when it reappears
       _goToFloatSlide(Math.floor(Math.random() * sysrections.length));
-      if (!_floatClosed) _showPromo('float');
+      if (!_floatClosed) _showPromo("float");
     }, 45000); // 45 sec cooldown
   }
 }
 
-
 function _isAllowedScreen() {
-  const activeScreen = document.querySelector('.screen.active');
-  return activeScreen && ['inputScreen', 'resultScreen', 'reportScreen'].includes(activeScreen.id);
+  const activeScreen = document.querySelector(".screen.active");
+  return (
+    activeScreen &&
+    ["inputScreen", "resultScreen", "reportScreen"].includes(activeScreen.id)
+  );
 }
 
 // ──────────────────────────────────────────────
 // 10. SHOW / HIDE / CLOSE LOGIC
 // ──────────────────────────────────────────────
-function _showPromo(mode = 'both') {
+function _showPromo(mode = "both") {
   if (!_isAllowedScreen() || _isCooldownActive()) return; // Abort if user is on a protected screen or cooldown active
 
   const banner = document.getElementById(SYSREC_CONFIG.BANNER_ID);
-  const card   = document.getElementById(SYSREC_CONFIG.FLOAT_ID);
+  const card = document.getElementById(SYSREC_CONFIG.FLOAT_ID);
 
-  if ((mode === 'both' || mode === 'banner') && banner && !_bannerClosed && !_bannerInCooldown) {
-    if (banner.style.display === 'none' || !banner.classList.contains('sysrec-slide-in')) {
-      banner.style.display = 'flex';
+  if (
+    (mode === "both" || mode === "banner") &&
+    banner &&
+    !_bannerClosed &&
+    !_bannerInCooldown
+  ) {
+    if (
+      banner.style.display === "none" ||
+      !banner.classList.contains("sysrec-slide-in")
+    ) {
+      banner.style.display = "flex";
       requestAnimationFrame(() => {
-        requestAnimationFrame(() => banner.classList.add('sysrec-slide-in'));
+        requestAnimationFrame(() => banner.classList.add("sysrec-slide-in"));
       });
       _updateBannerUI();
       _adjustBodyOffset(true);
     }
     _startBannerSlider();
   }
-  
-  if ((mode === 'both' || mode === 'float') && card && !_floatClosed && !_floatInCooldown) {
-    if (card.style.display === 'none' || !card.classList.contains('sysrec-slide-in')) {
-      card.style.display = 'flex';
+
+  if (
+    (mode === "both" || mode === "float") &&
+    card &&
+    !_floatClosed &&
+    !_floatInCooldown
+  ) {
+    if (
+      card.style.display === "none" ||
+      !card.classList.contains("sysrec-slide-in")
+    ) {
+      card.style.display = "flex";
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          card.classList.add('sysrec-slide-in');
+          card.classList.add("sysrec-slide-in");
           setTimeout(() => _adjustScreenPadding(true), 50);
         });
       });
@@ -963,22 +1081,22 @@ function _showPromo(mode = 'both') {
 }
 
 function _hidePromo(mode) {
-  if (mode === 'both' || mode === 'banner') _stopBannerSlider();
-  if (mode === 'both' || mode === 'float') _stopFloatSlider();
+  if (mode === "both" || mode === "banner") _stopBannerSlider();
+  if (mode === "both" || mode === "float") _stopFloatSlider();
   const banner = document.getElementById(SYSREC_CONFIG.BANNER_ID);
-  const card   = document.getElementById(SYSREC_CONFIG.FLOAT_ID);
+  const card = document.getElementById(SYSREC_CONFIG.FLOAT_ID);
 
-  if ((mode === 'both' || mode === 'banner') && banner) {
-    banner.classList.remove('sysrec-slide-in');
+  if ((mode === "both" || mode === "banner") && banner) {
+    banner.classList.remove("sysrec-slide-in");
     setTimeout(() => {
-      banner.style.display = 'none';
+      banner.style.display = "none";
       _adjustBodyOffset(false);
     }, SYSREC_CONFIG.TRANSITION_MS);
   }
-  if ((mode === 'both' || mode === 'float') && card) {
-    card.classList.remove('sysrec-slide-in');
+  if ((mode === "both" || mode === "float") && card) {
+    card.classList.remove("sysrec-slide-in");
     setTimeout(() => {
-      card.style.display = 'none';
+      card.style.display = "none";
       _adjustScreenPadding(false);
     }, SYSREC_CONFIG.TRANSITION_MS);
   }
@@ -990,45 +1108,51 @@ function _hidePromoSilent(mode) {
 
 function _adjustScreenPadding(add) {
   const card = document.getElementById(SYSREC_CONFIG.FLOAT_ID);
-  const isMobile = window.matchMedia('(max-width: 600px)').matches;
-  
-  const navOffset = isMobile && document.body.classList.contains('ps-has-nav') ? 75 : 12;
-  const isVisible = add && card && !_floatClosed && !_floatInCooldown && window.getComputedStyle(card).display !== 'none';
-  
-  // Adjusted mobile gap slightly so it doesn't leave massive empty space 
-  const cardH = card ? Math.min(card.offsetHeight || 130, 140) : 130;
-  const paddingVal = isVisible ? (cardH + navOffset + 8) + 'px' : '';
+  const isMobile = window.matchMedia("(max-width: 600px)").matches;
 
-  const activePanel = document.querySelector('.ps-panel.ps-panel-open .ps-panel-body');
+  const navOffset =
+    isMobile && document.body.classList.contains("ps-has-nav") ? 75 : 12;
+  const isVisible =
+    add &&
+    card &&
+    !_floatClosed &&
+    !_floatInCooldown &&
+    window.getComputedStyle(card).display !== "none";
+
+  // Adjusted mobile gap slightly so it doesn't leave massive empty space
+  const cardH = card ? Math.min(card.offsetHeight || 130, 140) : 130;
+  const paddingVal = isVisible ? cardH + navOffset + 8 + "px" : "";
+
+  const activePanel = document.querySelector(
+    ".ps-panel.ps-panel-open .ps-panel-body",
+  );
   if (activePanel) {
-    activePanel.style.transition = 'padding-bottom 0.35s ease';
+    activePanel.style.transition = "padding-bottom 0.35s ease";
     activePanel.style.paddingBottom = paddingVal;
   }
 
-  const activeScreen = document.querySelector('.screen.active .screen-content');
+  const activeScreen = document.querySelector(".screen.active .screen-content");
   if (activeScreen) {
-    activeScreen.style.transition = 'padding-bottom 0.35s ease';
+    activeScreen.style.transition = "padding-bottom 0.35s ease";
     activeScreen.style.paddingBottom = paddingVal;
   }
 
-  document.body.style.transition = 'padding-bottom 0.35s ease';
+  document.body.style.transition = "padding-bottom 0.35s ease";
   document.body.style.paddingBottom = paddingVal;
 }
-
-
 
 // ──────────────────────────────────────────────
 // 11. INLINE ALTERNATIVE CARD
 //     Injected into resultScreen after analysis
 // ──────────────────────────────────────────────
 function _buildAltCard(sysrec) {
-  const el = document.createElement('a');
-  el.className  = 'sysrec-alt-card';
-  el.href       = sysrec.link;
-  el.target     = '_blank';
-  el.rel        = 'noopener sponsored';
-  el.setAttribute('aria-label', `Recommended: ${sysrec.title}`);
-  el.innerHTML  = `
+  const el = document.createElement("a");
+  el.className = "sysrec-alt-card";
+  el.href = sysrec.link;
+  el.target = "_blank";
+  el.rel = "noopener sponsored";
+  el.setAttribute("aria-label", `Recommended: ${sysrec.title}`);
+  el.innerHTML = `
     <img
       class="sysrec-alt-img"
       src="${sysrec.image}"
@@ -1036,14 +1160,14 @@ function _buildAltCard(sysrec) {
       onerror="this.src='https://via.placeholder.com/52x52/6366f1/ffffff?text=AD'"
     >
     <div class="sysrec-alt-body">
-      <div class="sysrec-alt-badge">${sysrec.tag || 'Sponsored'}</div>
+      <div class="sysrec-alt-badge">${sysrec.tag || "Sponsored"}</div>
       <div class="sysrec-alt-title">${sysrec.title}</div>
       <div class="sysrec-alt-desc">${sysrec.description}</div>
     </div>
     <span class="sysrec-alt-arrow">›</span>
   `;
 
-  el.addEventListener('click', () => _trackClick(sysrec.id));
+  el.addEventListener("click", () => _trackClick(sysrec.id));
   return el;
 }
 
@@ -1057,7 +1181,7 @@ function showAlternativeCards(productQuery) {
   if (!SYSRECTION_ENABLED) return;
 
   // Remove old cards first
-  document.querySelectorAll('.sysrec-alt-card').forEach(el => el.remove());
+  document.querySelectorAll(".sysrec-alt-card").forEach((el) => el.remove());
 
   // Filter relevant sysrections based on food/health keywords
   const isRelevant = _isFoodHealthQuery(productQuery);
@@ -1069,17 +1193,18 @@ function showAlternativeCards(productQuery) {
   if (!toShow.length) return;
 
   // Find the injection point (before the View Report button)
-  const viewReportBtn = document.getElementById('btnViewReport');
-  const resultHero = document.querySelector('.result-hero');
-  
+  const viewReportBtn = document.getElementById("btnViewReport");
+  const resultHero = document.querySelector(".result-hero");
+
   if (!viewReportBtn && !resultHero) return;
 
   // Build a container
-  const container = document.createElement('div');
-  container.id    = 'sysrecAltContainer';
-  container.style.cssText = 'margin-top: 10px; margin-bottom: 16px; width: 100%; box-sizing: border-box; overflow: hidden;';
+  const container = document.createElement("div");
+  container.id = "sysrecAltContainer";
+  container.style.cssText =
+    "margin-top: 10px; margin-bottom: 16px; width: 100%; box-sizing: border-box; overflow: hidden;";
 
-  const heading = document.createElement('div');
+  const heading = document.createElement("div");
   heading.style.cssText = `
     font-size: 10.5px;
     font-weight: 700;
@@ -1088,10 +1213,10 @@ function showAlternativeCards(productQuery) {
     color: var(--text-muted, rgba(148,163,184,0.7));
     padding: 0 0 6px 0;
   `;
-  heading.textContent = '✦ Healthier Alternatives';
+  heading.textContent = "✦ Healthier Alternatives";
   container.appendChild(heading);
 
-  toShow.forEach(sysrec => container.appendChild(_buildAltCard(sysrec)));
+  toShow.forEach((sysrec) => container.appendChild(_buildAltCard(sysrec)));
 
   if (viewReportBtn) {
     viewReportBtn.before(container);
@@ -1099,7 +1224,6 @@ function showAlternativeCards(productQuery) {
     resultHero.after(container);
   }
 }
-
 
 // ──────────────────────────────────────────────
 // 12. HOOK INTO PURESCAN NAVIGATION
@@ -1109,31 +1233,33 @@ function showAlternativeCards(productQuery) {
 function _hookNavigation() {
   // Monkey-patch the global navigateTo if available
   const origNavigateTo = window.navigateTo;
-  if (typeof origNavigateTo === 'function') {
-    window.navigateTo = function(screenId) {
+  if (typeof origNavigateTo === "function") {
+    window.navigateTo = function (screenId) {
       origNavigateTo(screenId);
 
       if (!SYSRECTION_ENABLED || _isCooldownActive()) return;
 
-      if (screenId === 'inputScreen' || screenId === 'resultScreen' || screenId === 'reportScreen') {
+      if (
+        screenId === "inputScreen" ||
+        screenId === "resultScreen" ||
+        screenId === "reportScreen"
+      ) {
         // ✅ Show BOTH banner and float on Home (input), Result, and Report screens
-        setTimeout(() => _showPromo('banner'), 800);
-        setTimeout(() => _showPromo('float'), 1200);
-
-      } else if (screenId === 'loadingScreen') {
+        setTimeout(() => _showPromo("banner"), 800);
+        setTimeout(() => _showPromo("float"), 1200);
+      } else if (screenId === "loadingScreen") {
         // ⏳ Hide float cleanly during analysis
-        _hidePromoSilent('float');
-
+        _hidePromoSilent("float");
       } else {
         // 🏠 Splash / HowItWorks — no ads yet, keep everything hidden
-        _hidePromoSilent('both');
+        _hidePromoSilent("both");
       }
     };
   }
 
   // Hook into Health Modules bottom navigation clicks
-  document.addEventListener('click', (e) => {
-    const navItem = e.target.closest('.ps-nav-item');
+  document.addEventListener("click", (e) => {
+    const navItem = e.target.closest(".ps-nav-item");
     if (navItem) {
       if (!SYSRECTION_ENABLED || _isCooldownActive()) return;
       // Re-trigger padding adjustment for the new panel after it slides up
@@ -1149,22 +1275,25 @@ function _hookNavigation() {
  * @param {'banner'|'float'|'both'} which
  */
 function _hidePromoSilent(which) {
-  if (which === 'both' || which === 'banner') _stopBannerSlider();
-  if (which === 'both' || which === 'float') _stopFloatSlider();
+  if (which === "both" || which === "banner") _stopBannerSlider();
+  if (which === "both" || which === "float") _stopFloatSlider();
   const banner = document.getElementById(SYSREC_CONFIG.BANNER_ID);
-  const card   = document.getElementById(SYSREC_CONFIG.FLOAT_ID);
+  const card = document.getElementById(SYSREC_CONFIG.FLOAT_ID);
 
-  if ((which === 'both' || which === 'float') && card) {
-    _adjustScreenPadding(false);  // restore page padding
-    card.classList.remove('sysrec-slide-in');
-    setTimeout(() => { card.style.display = 'none'; }, SYSREC_CONFIG.TRANSITION_MS);
+  if ((which === "both" || which === "float") && card) {
+    _adjustScreenPadding(false); // restore page padding
+    card.classList.remove("sysrec-slide-in");
+    setTimeout(() => {
+      card.style.display = "none";
+    }, SYSREC_CONFIG.TRANSITION_MS);
   }
-  if ((which === 'both' || which === 'banner') && banner) {
-    banner.classList.remove('sysrec-slide-in');
-    setTimeout(() => { banner.style.display = 'none'; }, SYSREC_CONFIG.TRANSITION_MS);
+  if ((which === "both" || which === "banner") && banner) {
+    banner.classList.remove("sysrec-slide-in");
+    setTimeout(() => {
+      banner.style.display = "none";
+    }, SYSREC_CONFIG.TRANSITION_MS);
   }
 }
-
 
 // ──────────────────────────────────────────────
 // 13. PUBLIC API (exposed on window)
@@ -1182,45 +1311,63 @@ function _hidePromoSilent(which) {
  *   window.PureScanPromo.reset()              → clear cooldown (dev util)
  */
 window.PureScanPromo = {
-  show:             ()  => _showPromo('both'),
-  showBanner:       ()  => _showPromo('banner'),
-  showFloat:        ()  => _showPromo('float'),
-  hide:             ()  => _hidePromo('both'),
-  close:            ()  => {
+  show: () => _showPromo("both"),
+  showBanner: () => _showPromo("banner"),
+  showFloat: () => _showPromo("float"),
+  hide: () => _hidePromo("both"),
+  close: () => {
     _bannerClosed = true;
     _floatClosed = true;
     _saveCooldown();
-    _hidePromo('both');
+    _hidePromo("both");
     setTimeout(() => {
       _bannerClosed = false;
       _floatClosed = false;
-      if (!_isCooldownActive()) _showPromo('both');
+      if (!_isCooldownActive()) _showPromo("both");
     }, SYSREC_CONFIG.COOLDOWN_MS);
   },
   showAlternatives: (q) => showAlternativeCards(q),
-  goToSlide:        (n) => { _bannerIndex = n; _updateBannerUI(); _goToFloatSlide(n); },
-  getClickStats:    ()  => {
-    try { return JSON.parse(localStorage.getItem(SYSREC_CONFIG.CLICK_LOG_KEY) || '{}'); }
-    catch(e) { return {}; }
+  goToSlide: (n) => {
+    _bannerIndex = n;
+    _updateBannerUI();
+    _goToFloatSlide(n);
+  },
+  getClickStats: () => {
+    try {
+      return JSON.parse(
+        localStorage.getItem(SYSREC_CONFIG.CLICK_LOG_KEY) || "{}",
+      );
+    } catch (e) {
+      return {};
+    }
   },
   reset: () => {
     localStorage.removeItem(SYSREC_CONFIG.STORAGE_KEY);
-    console.info('[PureScanPromo] Cooldown cleared. Promotions will show on next display.');
-  }
+    console.info(
+      "[PureScanPromo] Cooldown cleared. Promotions will show on next display.",
+    );
+  },
 };
-
 
 // ──────────────────────────────────────────────
 // 14. INITIALIZATION
 //     Runs automatically on DOMContentLoaded
 // ──────────────────────────────────────────────
 function initPromotions() {
-  console.log('[PureScanPromo] Initializing...');
-  if (!SYSRECTION_ENABLED) { console.log('[PureScanPromo] Disabled via config.'); return; }
-  if (!sysrections.length) { console.log('[PureScanPromo] No sysrections to show.'); return; }
+  console.log("[PureScanPromo] Initializing...");
+  if (!SYSRECTION_ENABLED) {
+    console.log("[PureScanPromo] Disabled via config.");
+    return;
+  }
+  if (!sysrections.length) {
+    console.log("[PureScanPromo] No sysrections to show.");
+    return;
+  }
 
   // Clear cooldown on every reload so testing is easy (remove in prod if needed)
-  try { localStorage.removeItem(SYSREC_CONFIG.STORAGE_KEY); } catch(e) {}
+  try {
+    localStorage.removeItem(SYSREC_CONFIG.STORAGE_KEY);
+  } catch (e) {}
 
   _injectStyles();
   _buildBanner();
@@ -1230,27 +1377,37 @@ function initPromotions() {
   _sysrecReady = true;
 
   // Fallback: If user is ALREADY on inputScreen/resultScreen/reportScreen on load, force ads
-  const activeScreen = document.querySelector('.screen.active');
-  if (activeScreen && ['inputScreen', 'resultScreen', 'reportScreen'].includes(activeScreen.id)) {
-    console.log('[PureScanPromo] Fallback ad trigger - already on ' + activeScreen.id);
-    setTimeout(() => _showPromo('banner'), 400);
-    setTimeout(() => _showPromo('float'), 800);
+  const activeScreen = document.querySelector(".screen.active");
+  if (
+    activeScreen &&
+    ["inputScreen", "resultScreen", "reportScreen"].includes(activeScreen.id)
+  ) {
+    console.log(
+      "[PureScanPromo] Fallback ad trigger - already on " + activeScreen.id,
+    );
+    setTimeout(() => _showPromo("banner"), 400);
+    setTimeout(() => _showPromo("float"), 800);
   } else {
-    console.log('[PureScanPromo] Waiting for user to reach Home/Scan screen...');
+    console.log(
+      "[PureScanPromo] Waiting for user to reach Home/Scan screen...",
+    );
   }
 
   // Hook into PureScan's analysis complete event to show inline alternatives
   // This works because script.js calls displayResults() after analysis
   const origDisplayResults = window.displayResults;
-  if (typeof origDisplayResults === 'function') {
-    window.displayResults = function(data) {
+  if (typeof origDisplayResults === "function") {
+    window.displayResults = function (data) {
       origDisplayResults(data);
       // Remove stale alt cards
-      const old = document.getElementById('sysrecAltContainer');
+      const old = document.getElementById("sysrecAltContainer");
       if (old) old.remove();
       // Wait for DOM to render then inject alt cards
       setTimeout(() => {
-        const query = (data && data.productName) || (window.AppState && window.AppState.productName) || '';
+        const query =
+          (data && data.productName) ||
+          (window.AppState && window.AppState.productName) ||
+          "";
         showAlternativeCards(query);
       }, 200);
     };
@@ -1258,8 +1415,8 @@ function initPromotions() {
 }
 
 // Auto-start
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initPromotions);
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initPromotions);
 } else {
   // DOM is already ready — schedule after other scripts initialize
   setTimeout(initPromotions, 300);

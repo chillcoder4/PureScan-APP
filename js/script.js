@@ -132,6 +132,7 @@ function cacheDOMElements() {
   DOM.errorModal = document.getElementById('errorModal');
   DOM.errorMessage = document.getElementById('errorMessage');
   DOM.btnCloseError = document.getElementById('btnCloseError');
+  DOM.btnCancelError = document.getElementById('btnCancelError');
 
   // About
   DOM.aboutToggle = document.getElementById('aboutToggle');
@@ -157,10 +158,13 @@ function cacheDOMElements() {
 // NAVIGATION
 // ==========================================
 function navigateTo(screenId) {
+  if (AppState.isScannerRunning) {
+    stopBarcodeScanner();
+  }
   const currentScreen = document.querySelector('.screen.active');
   if (currentScreen) {
     currentScreen.style.opacity = '0';
-    currentScreen.style.transform = 'translateY(20px)';
+    currentScreen.style.transform = 'translate3d(0, 20px, 0)';
     setTimeout(() => {
       currentScreen.classList.remove('active');
       currentScreen.style.display = 'none';
@@ -177,7 +181,7 @@ function showScreen(screenId) {
 
   screen.style.display = 'flex';
   screen.style.opacity = '0';
-  screen.style.transform = 'translateY(20px)';
+  screen.style.transform = 'translate3d(0, 20px, 0)';
 
   // Force reflow
   screen.offsetHeight;
@@ -185,7 +189,7 @@ function showScreen(screenId) {
   requestAnimationFrame(() => {
     screen.classList.add('active');
     screen.style.opacity = '1';
-    screen.style.transform = 'translateY(0)';
+    screen.style.transform = 'translate3d(0, 0, 0)';
   });
 
   AppState.currentScreen = screenId;
@@ -382,6 +386,98 @@ function t(key) {
 }
 
 // ==========================================
+// CUSTOM TOAST & CONFIRM MODALS
+// ==========================================
+function showToast(message, type = 'info') {
+  let container = document.getElementById('toastContainer');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toastContainer';
+    document.body.appendChild(container);
+  }
+
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  
+  let iconName = 'info';
+  if (type === 'success') iconName = 'check-circle';
+  else if (type === 'error') iconName = 'alert-circle';
+  else if (type === 'warning') iconName = 'alert-triangle';
+
+  toast.innerHTML = `
+    <div class="toast-icon">
+      <i data-lucide="${iconName}"></i>
+    </div>
+    <div class="toast-text">${message}</div>
+  `;
+
+  container.appendChild(toast);
+  
+  if (window.lucide) {
+    lucide.createIcons({
+      attrs: { style: 'width: 18px; height: 18px;' },
+      nameAttr: 'data-lucide'
+    });
+  }
+
+  // Reflow and show
+  setTimeout(() => {
+    toast.classList.add('show');
+  }, 10);
+
+  // Auto-dismiss
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => {
+      toast.remove();
+    }, 350);
+  }, 3500);
+}
+
+// Make globally accessible for other modules
+window.showToast = showToast;
+
+function showConfirm(messageKeyOrText, onConfirm) {
+  const modal = document.getElementById('confirmModal');
+  if (!modal) {
+    // Fallback if HTML element not found
+    if (confirm(t(messageKeyOrText))) {
+      onConfirm();
+    }
+    return;
+  }
+
+  const msgEl = document.getElementById('confirmMessage');
+  msgEl.innerHTML = t(messageKeyOrText);
+
+  modal.style.display = 'flex';
+  if (window.lucide) lucide.createIcons();
+
+  const btnOK = document.getElementById('btnConfirmOK');
+  const btnCancel = document.getElementById('btnConfirmCancel');
+
+  const cleanUp = () => {
+    modal.style.display = 'none';
+    const newOK = btnOK.cloneNode(true);
+    const newCancel = btnCancel.cloneNode(true);
+    btnOK.parentNode.replaceChild(newOK, btnOK);
+    btnCancel.parentNode.replaceChild(newCancel, btnCancel);
+  };
+
+  document.getElementById('btnConfirmOK').addEventListener('click', () => {
+    cleanUp();
+    onConfirm();
+  });
+
+  document.getElementById('btnConfirmCancel').addEventListener('click', () => {
+    cleanUp();
+  });
+}
+
+// Make globally accessible
+window.showConfirm = showConfirm;
+
+// ==========================================
 // TAB MANAGEMENT
 // ==========================================
 function initTabs() {
@@ -415,11 +511,16 @@ const POPULAR_PRODUCTS = [
   'Chyawanprash', 'Saffola Oil', 'Fortune Oil', 'Mother Dairy Milk'
 ];
 
-function initSearchSuggestions() {
-  DOM.productSearchInput.addEventListener('input', (e) => {
-    const query = e.target.value.trim().toLowerCase();
-    updateAnalyzeButtonState();
+function debounce(func, wait) {
+  let timeout;
+  return function(...args) {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func.apply(this, args), wait);
+  };
+}
 
+function initSearchSuggestions() {
+  const showSuggestionsDebounced = debounce((query) => {
     if (query.length < 2) {
       DOM.searchSuggestions.classList.remove('visible');
       DOM.searchSuggestions.innerHTML = '';
@@ -452,6 +553,12 @@ function initSearchSuggestions() {
     } else {
       DOM.searchSuggestions.classList.remove('visible');
     }
+  }, 300);
+
+  DOM.productSearchInput.addEventListener('input', (e) => {
+    const query = e.target.value.trim().toLowerCase();
+    updateAnalyzeButtonState();
+    showSuggestionsDebounced(query);
   });
 
   // Hide suggestions on outside click
@@ -831,6 +938,19 @@ function updateAnalyzeButtonState() {
 // ==========================================
 async function startAnalysis() {
   if (AppState.isAnalyzing) return;
+
+  // Rate limit / click spam protection
+  if (!window.lastAnalysisTime) {
+    window.lastAnalysisTime = 0;
+  }
+  const now = Date.now();
+  if (now - window.lastAnalysisTime < 3000) {
+    const msg = t("toastTooManyRequests");
+    showToast(msg === "toastTooManyRequests" ? "Too many requests. Please wait a few seconds." : msg, "warning");
+    return;
+  }
+  window.lastAnalysisTime = now;
+
   AppState.isAnalyzing = true;
 
   // Determine product name / barcode query
@@ -987,7 +1107,10 @@ async function startAnalysis() {
 
   } catch (error) {
     console.error('Analysis failed:', error);
-    showError(error.message || t('apiError'));
+    showError(error.message || t('apiError'), () => {
+      window.lastAnalysisTime = 0; // Bypass rate limit for manual retry click
+      startAnalysis();
+    });
     navigateTo('inputScreen');
   } finally {
     AppState.isAnalyzing = false;
@@ -1254,14 +1377,33 @@ function renderHistory() {
 // ==========================================
 // ERROR HANDLING
 // ==========================================
-function showError(message) {
+let currentRetryCallback = null;
+
+function showError(message, retryCallback = null) {
   DOM.errorMessage.textContent = message;
+  currentRetryCallback = retryCallback;
+  
+  if (retryCallback) {
+    if (DOM.btnCancelError) DOM.btnCancelError.style.display = 'block';
+  } else {
+    if (DOM.btnCancelError) DOM.btnCancelError.style.display = 'none';
+  }
+  
   DOM.errorModal.style.display = 'flex';
   if (window.lucide) lucide.createIcons();
 }
 
-function hideError() {
+function hideError(isCancel = false) {
   DOM.errorModal.style.display = 'none';
+  if (isCancel) {
+    currentRetryCallback = null;
+    return;
+  }
+  if (currentRetryCallback) {
+    const callback = currentRetryCallback;
+    currentRetryCallback = null;
+    callback();
+  }
 }
 
 // ==========================================
@@ -1455,8 +1597,8 @@ function bindEvents() {
     if (authTabLogin) authTabLogin.classList.add('active');
     if (authTabRegister) authTabRegister.classList.remove('active');
     document.getElementById('authTabsToggle').style.display = 'flex';
-    document.getElementById('authScreenTitle').textContent = 'Login to PureScan';
-    document.getElementById('authScreenSub').textContent = 'Access your safe food assistant';
+    document.getElementById('authScreenTitle').textContent = t('loginTitle');
+    document.getElementById('authScreenSub').textContent = t('loginSub');
     document.getElementById('authLogoIcon').setAttribute('data-lucide', 'log-in');
     
     document.querySelectorAll('.register-only-field').forEach(el => el.style.display = 'none');
@@ -1464,7 +1606,7 @@ function bindEvents() {
     document.querySelector('.auth-password-field').style.display = 'flex';
     document.getElementById('backToLoginContainer').style.display = 'none';
     
-    document.getElementById('btnAuthText').textContent = 'Log In';
+    document.getElementById('btnAuthText').textContent = t('logIn');
     document.getElementById('btnAuthIcon').setAttribute('data-lucide', 'log-in');
     
     document.getElementById('regName').removeAttribute('required');
@@ -1479,8 +1621,8 @@ function bindEvents() {
     if (authTabLogin) authTabLogin.classList.remove('active');
     if (authTabRegister) authTabRegister.classList.add('active');
     document.getElementById('authTabsToggle').style.display = 'flex';
-    document.getElementById('authScreenTitle').textContent = 'Create Profile';
-    document.getElementById('authScreenSub').textContent = 'Set up your health goals and personal details';
+    document.getElementById('authScreenTitle').textContent = t('createProfile');
+    document.getElementById('authScreenSub').textContent = t('createProfileSub');
     document.getElementById('authLogoIcon').setAttribute('data-lucide', 'user-plus');
     
     document.querySelectorAll('.register-only-field').forEach(el => el.style.display = 'flex');
@@ -1488,7 +1630,7 @@ function bindEvents() {
     document.querySelector('.auth-password-field').style.display = 'flex';
     document.getElementById('backToLoginContainer').style.display = 'none';
     
-    document.getElementById('btnAuthText').textContent = 'Create Profile & Register';
+    document.getElementById('btnAuthText').textContent = t('createProfileAndRegister');
     document.getElementById('btnAuthIcon').setAttribute('data-lucide', 'check');
     
     document.getElementById('regName').setAttribute('required', 'true');
@@ -1501,8 +1643,8 @@ function bindEvents() {
   function showForgotPasswordState() {
     authCurrentState = 'forgot';
     document.getElementById('authTabsToggle').style.display = 'none';
-    document.getElementById('authScreenTitle').textContent = 'Reset Password';
-    document.getElementById('authScreenSub').textContent = 'We will send a reset link to your email';
+    document.getElementById('authScreenTitle').textContent = t('resetPassword');
+    document.getElementById('authScreenSub').textContent = t('resetPasswordSub');
     document.getElementById('authLogoIcon').setAttribute('data-lucide', 'key-round');
     
     document.querySelectorAll('.register-only-field').forEach(el => el.style.display = 'none');
@@ -1510,7 +1652,7 @@ function bindEvents() {
     document.querySelector('.auth-password-field').style.display = 'none';
     document.getElementById('backToLoginContainer').style.display = 'block';
     
-    document.getElementById('btnAuthText').textContent = 'Send Reset Link';
+    document.getElementById('btnAuthText').textContent = t('sendResetLink');
     document.getElementById('btnAuthIcon').setAttribute('data-lucide', 'mail');
     
     document.getElementById('regPassword').removeAttribute('required');
@@ -1543,7 +1685,7 @@ function bindEvents() {
         if (window.lucide) lucide.createIcons();
         try {
           await PureFirebase.resetPassword(email);
-          alert("Password reset email sent! Please check your inbox.");
+          showToast(t("toastPasswordResetSent") || "Password reset email sent! Please check your inbox.", "success");
           showLoginState();
         } catch (err) {
           showError("Error: " + err.message);
@@ -1674,9 +1816,9 @@ function bindEvents() {
   // Logout / Register Trigger
   const profLogout = document.getElementById('profLogout');
   if (profLogout) {
-    profLogout.addEventListener('click', async () => {
+    profLogout.addEventListener('click', () => {
       if (PureFirebase.auth && PureFirebase.auth.currentUser) {
-        if (confirm("Are you sure you want to log out?")) {
+        showConfirm("confirmLogout", async () => {
           try {
             await PureFirebase.logout();
             localStorage.removeItem('ps_guest_mode'); // Clear guest mode cache on explicit logout
@@ -1685,7 +1827,7 @@ function bindEvents() {
           } catch (e) {
             showError("Logout failed: " + e.message);
           }
-        }
+        });
       } else {
         // Guest user clicks "Login / Register"
         const panel = document.getElementById('psProfilePanel');
@@ -1757,9 +1899,12 @@ function bindEvents() {
   });
 
   // Error modal
-  DOM.btnCloseError.addEventListener('click', hideError);
+  DOM.btnCloseError.addEventListener('click', () => hideError(false));
+  if (DOM.btnCancelError) {
+    DOM.btnCancelError.addEventListener('click', () => hideError(true));
+  }
   DOM.errorModal.addEventListener('click', (e) => {
-    if (e.target === DOM.errorModal) hideError();
+    if (e.target === DOM.errorModal) hideError(true);
   });
 
   // About modal
@@ -1806,21 +1951,23 @@ function bindEvents() {
   }
 
   if (clearHistoryBtn) {
-    clearHistoryBtn.addEventListener('click', async () => {
-      if (confirm('Clear all scan history?')) {
+    clearHistoryBtn.addEventListener('click', () => {
+      showConfirm("confirmClearHistory", async () => {
         if (PureFirebase.auth.currentUser) {
           try {
             await PureFirebase.clearHistory();
             AppState.historyCache = [];
+            showToast(t("toastHistoryCleared"), "success");
           } catch (e) {
             console.error('Failed to clear history from Firestore:', e);
-            alert('Failed to clear history. Please try again.');
+            showToast(t("toastError") || 'Failed to clear history. Please try again.', "error");
           }
         } else {
           localStorage.removeItem(CONFIG.HISTORY_KEY);
+          showToast(t("toastHistoryCleared"), "success");
         }
         renderHistory();
-      }
+      });
     });
   }
 
@@ -1879,6 +2026,14 @@ function bindEvents() {
       }
     });
   }
+
+  // Offline / Online monitoring
+  window.addEventListener('online', () => {
+    showToast(t("toastOnline"), "success");
+  });
+  window.addEventListener('offline', () => {
+    showToast(t("toastOffline"), "warning");
+  });
 }
 
 // ==========================================
@@ -2043,6 +2198,7 @@ async function migrateLocalStorageToFirebase(uid) {
     return;
   }
 
+  console.log("[PureScan Debug] Migration started.");
   console.log("[PureScan] Checking for localStorage data to migrate for uid:", uid);
   
   // 1. Migrate user profile
@@ -2138,6 +2294,7 @@ async function migrateLocalStorageToFirebase(uid) {
   localStorage.removeItem('purescan_bmi');
   localStorage.removeItem('purescan_tip_index');
   
+  console.log("[PureScan Debug] Migration completed.");
   console.log("[PureScan] LocalStorage migration complete. Removed old keys.");
 }
 
@@ -2200,57 +2357,129 @@ function init() {
         navigateTo('registerScreen');
       }
     }
+    console.log("[PureScan Debug] App startup completed.");
     return;
   }
 
-  // Firebase Authentication State Listener
-  PureFirebase.auth.onAuthStateChanged(async (user) => {
-    if (user) {
-      console.log("[PureScan] User authenticated:", user.uid);
-      localStorage.setItem('ps_user_logged_in', '1'); // Set login state cache
-      localStorage.removeItem('ps_guest_mode'); // Clear guest mode cache
-      try {
-        await PureFirebase.loadUserProfile(user.uid);
-        await migrateLocalStorageToFirebase(user.uid);
-        syncPreferencesFromProfile();
-        updateProfileDisplay();
-        
-        AppState.historyCache = await PureFirebase.getHistory();
-        
+  console.log("[PureScan Debug] Firebase initialized.");
+
+  let authResolved = false;
+  let authTimeoutId = null;
+
+  // 2-second timeout protection callback
+  function triggerAuthTimeoutFallback() {
+    if (authResolved) return;
+    authResolved = true;
+    console.warn("[PureScan Debug] Auth state check timed out after 2 seconds. Proceeding to fallback.");
+    
+    // Remove loading spinner
+    const splashScreen = document.getElementById('splashScreen');
+    if (splashScreen) {
+      splashScreen.classList.remove('loading-mode');
+    }
+    
+    // Determine screen routing
+    if (!hasOnboardedLocal) {
+      setTimeout(() => {
+        const splash = document.getElementById('splashScreen');
+        if (splash) splash.classList.add('active');
+      }, 100);
+    } else {
+      if (isGuestMode) {
         navigateTo('inputScreen');
-        renderHistory();
-        
-        if (window.PureHealthModules) {
-          window.PureHealthModules.initChatFromHistory();
-          window.PureHealthModules.initBMI();
-          window.PureHealthModules.initDailyTip();
-        }
-
-        // Sync onboarding completed state to local cache if needed
-        const profile = PureFirebase.currentUserProfile;
-        if (profile && profile.settings) {
-          if (profile.settings.onboardingCompleted === true && !hasOnboardedLocal) {
-            localStorage.setItem('ps_onboarding_completed', '1');
-          } else if (profile.settings.onboardingCompleted !== true && hasOnboardedLocal) {
-            await PureFirebase.saveSetting('onboardingCompleted', true);
-          }
-        }
-
-        // Trigger v1.1.0 update modal check
-        checkAndShowUpdateModal();
-      } catch (e) {
-        console.error("Error setting up authenticated user details:", e);
-        showError("Failed to load user profile: " + e.message);
-        
-        // Remove loading-mode so the user is not stuck on a loading screen
-        const splashScreen = document.getElementById('splashScreen');
-        if (splashScreen) {
-          splashScreen.classList.remove('loading-mode');
-        }
+      } else {
         navigateTo('registerScreen');
       }
+    }
+    console.log("[PureScan Debug] App startup completed.");
+  }
+
+  // Start 2s timeout timer
+  authTimeoutId = setTimeout(triggerAuthTimeoutFallback, 2000);
+
+  console.log("[PureScan Debug] Auth listener registered.");
+
+  // Firebase Authentication State Listener
+  PureFirebase.auth.onAuthStateChanged(async (user) => {
+    console.log("[PureScan Debug] Auth state received:", user ? "User found" : "User not found");
+    if (authResolved) {
+      console.warn("[PureScan Debug] Auth listener fired after timeout/fallback resolved. Ignoring.");
+      return;
+    }
+    authResolved = true;
+    if (authTimeoutId) {
+      clearTimeout(authTimeoutId);
+    }
+
+    if (user) {
+      console.log("[PureScan Debug] User found: " + user.uid);
+      localStorage.setItem('ps_user_logged_in', '1'); // Set login state cache
+      localStorage.removeItem('ps_guest_mode'); // Clear guest mode cache
+      
+      // Navigate to main screen immediately (under 2 seconds) to avoid blocking the UI
+      navigateTo('inputScreen');
+      renderHistory();
+      console.log("[PureScan Debug] App startup completed.");
+
+      // Now run Firestore loads and migrations asynchronously in the background
+      (async () => {
+        try {
+          console.log("[PureScan Debug] Concurrent profile and history loading started in background.");
+          
+          const profilePromise = PureFirebase.loadUserProfile(user.uid);
+          const historyPromise = PureFirebase.getHistory();
+          const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(null), 3000));
+          const historyTimeoutPromise = new Promise((resolve) => setTimeout(() => resolve([]), 3000));
+
+          const [profile, history] = await Promise.all([
+            Promise.race([profilePromise, timeoutPromise]),
+            Promise.race([historyPromise, historyTimeoutPromise])
+          ]);
+
+          if (profile) {
+            console.log("[PureScan Debug] Profile loaded.");
+            syncPreferencesFromProfile();
+            updateProfileDisplay();
+          } else {
+            console.warn("[PureScan Debug] Profile load failed or timed out.");
+            updateProfileDisplay();
+          }
+
+          AppState.historyCache = history || [];
+          renderHistory();
+          console.log("[PureScan Debug] History loaded.");
+
+          // Background Local Storage Migration (fire-and-forget, never blocks UI)
+          migrateLocalStorageToFirebase(user.uid).then(() => {
+            updateProfileDisplay();
+          }).catch(err => {
+            console.error("Migration error in background:", err);
+          });
+
+          if (window.PureHealthModules) {
+            window.PureHealthModules.initChatFromHistory();
+            window.PureHealthModules.initBMI();
+            window.PureHealthModules.initDailyTip();
+          }
+
+          // Sync onboarding completed state to local cache if needed
+          if (profile && profile.settings) {
+            if (profile.settings.onboardingCompleted === true && !hasOnboardedLocal) {
+              localStorage.setItem('ps_onboarding_completed', '1');
+            } else if (profile.settings.onboardingCompleted !== true && hasOnboardedLocal) {
+              await PureFirebase.saveSetting('onboardingCompleted', true);
+            }
+          }
+
+          // Trigger v1.1.0 update modal check
+          checkAndShowUpdateModal();
+        } catch (e) {
+          console.error("Background loading error:", e);
+        }
+      })();
+
     } else {
-      console.log("[PureScan] No active user session.");
+      console.log("[PureScan Debug] User not found.");
       localStorage.removeItem('ps_user_logged_in'); // Clear login state cache
       
       // Ensure loading-mode is removed from splash screen to prevent locking
@@ -2273,6 +2502,9 @@ function init() {
         // Show Splash onboarding flow for first-time visitor
         setTimeout(() => {
           document.getElementById('splashScreen').classList.add('active');
+          if (typeof showLanguageModal === 'function') {
+            showLanguageModal();
+          }
         }, 100);
       } else {
         if (localStorage.getItem('ps_guest_mode') === '1') {
@@ -2284,6 +2516,7 @@ function init() {
         // Trigger v1.1.0 update modal check for returning guests
         checkAndShowUpdateModal();
       }
+      console.log("[PureScan Debug] App startup completed.");
     }
   });
 

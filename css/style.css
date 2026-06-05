@@ -121,7 +121,8 @@ body {
   width: 100%;
   padding: 1.5rem;
   opacity: 0;
-  transform: translateY(20px);
+  transform: translate3d(0, 20px, 0);
+  will-change: opacity, transform;
   transition:
     opacity var(--transition-slow),
     transform var(--transition-slow);
@@ -132,7 +133,7 @@ body {
   flex-direction: column;
   align-items: center;
   opacity: 1;
-  transform: translateY(0);
+  transform: translate3d(0, 0, 0);
 }
 
 .screen-content {
@@ -2916,4 +2917,114 @@ body {
 }
 #splashScreen.loading-mode #splashLoader {
   display: flex !important;
+}
+
+/* ==========================================================================
+   PRODUCTION HARDENING - ADDITIONAL STYLES (v1.1.0)
+   ========================================================================== */
+
+/* Toast Notification System */
+#toastContainer {
+  position: fixed;
+  top: 1.5rem;
+  right: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  z-index: 10000;
+  pointer-events: none;
+  max-width: 360px;
+  width: 90%;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1.25rem;
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  pointer-events: auto;
+  opacity: 0;
+  transform: translateY(-20px) scale(0.9);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.toast-success {
+  border-left: 4px solid #10b981;
+}
+
+.toast-error {
+  border-left: 4px solid #ef4444;
+}
+
+.toast-info {
+  border-left: 4px solid #0ea5e9;
+}
+
+.toast-warning {
+  border-left: 4px solid #f59e0b;
+}
+
+.toast-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+}
+
+/* Skeleton Loading Shimmer Effect */
+.skeleton-pulse {
+  background: linear-gradient(
+    90deg,
+    var(--glass-bg) 25%,
+    rgba(255, 255, 255, 0.08) 50%,
+    var(--glass-bg) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s infinite;
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Custom Outlines and touch targets for accessibility */
+button, select, input, a {
+  min-height: 44px;
+  min-width: 44px;
+}
+.lang-btn, .ui-theme-btn, .gender-btn, .gender-edit-btn {
+  min-height: 44px;
+}
+/* Ensure close buttons/icons aren't oversized */
+button.about-close, button.ps-barcode-modal-close, button#btnCloseProfileEdit, button#btnCloseLanguage, button#btnCloseUiSelect {
+  min-height: unset;
+  min-width: unset;
+  width: 44px;
+  height: 44px;
+}
+
+button:focus-visible, input:focus-visible, select:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
 }

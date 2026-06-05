@@ -887,13 +887,14 @@
     });
 
     clearBtn.addEventListener('click', () => {
-      if (confirm(mt('confirm_clear'))) {
+      showConfirm(mt('confirm_clear'), () => {
         localStorage.removeItem(PS_CHAT_HISTORY_KEY);
         const msgs = document.getElementById('psChatMessages');
         msgs.innerHTML = '';
         addAIWelcomeMessage();
         if (window.lucide) lucide.createIcons();
-      }
+        showToast(mt('toastHistoryCleared') || "Chat history cleared", "success");
+      });
     });
 
     // Suggestion buttons
@@ -1304,7 +1305,7 @@
     const profHelp = document.getElementById('profHelp');
     if (profHelp) {
       profHelp.addEventListener('click', () => {
-        alert('Help & Support: For support, contact founders: sundramgoud@gmail.com.');
+        showToast('Help & Support: For support, contact founders: sundramgoud@gmail.com.', 'info');
       });
     }
   }
@@ -1447,7 +1448,7 @@
         await tempScanner.clear();
         closeChatBarcodeModal(window._currentChatScanner, overlay);
       } catch (err) {
-        alert(mt('alert_barcode_fail'));
+        showToast(mt('alert_barcode_fail'), 'error');
       }
     });
 
@@ -1905,7 +1906,7 @@
       const height = parseFloat(document.getElementById('psBmiHeight').value);
 
       if (!weight || !height || weight <= 0 || height <= 0) {
-        alert(mt('alert_bmi_invalid'));
+        showToast(mt('alert_bmi_invalid'), 'warning');
         return;
       }
 
