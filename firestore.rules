@@ -1,0 +1,60 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    // Users collection
+    match /users/{userId} {
+      allow read, write: if isAuthenticated() && isOwner(userId);
+    }
+    
+    // UserProfiles collection
+    match /userProfiles/{userId} {
+      allow read, write: if isAuthenticated() && isOwner(userId);
+    }
+    
+    // ScanHistory collection (scoped by uid field)
+    match /scanHistory/{docId} {
+      allow read: if isAuthenticated() && resource.data.uid == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if isAuthenticated() && resource.data.uid == request.auth.uid;
+    }
+    
+    // ChatHistory collection (userId is doc ID)
+    match /chatHistory/{userId} {
+      allow read, write: if isAuthenticated() && isOwner(userId);
+    }
+    
+    // SavedProducts collection (scoped by uid field)
+    match /savedProducts/{docId} {
+      allow read: if isAuthenticated() && resource.data.uid == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if isAuthenticated() && resource.data.uid == request.auth.uid;
+    }
+    
+    // Settings collection (scoped by uid field)
+    match /settings/{userId} {
+      allow read, write: if isAuthenticated() && isOwner(userId);
+    }
+    
+    // Feedback collection
+    match /feedback/{docId} {
+      allow create: if isAuthenticated() && request.resource.data.uid == request.auth.uid;
+      allow read, write: if false; // Admin only
+    }
+    
+    // AnalysisHistory collection (scoped by uid field)
+    match /analysisHistory/{docId} {
+      allow read: if isAuthenticated() && resource.data.uid == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if isAuthenticated() && resource.data.uid == request.auth.uid;
+    }
+  }
+}
