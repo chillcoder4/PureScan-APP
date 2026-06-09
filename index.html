@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>PureScan — Listen to Science, Not Marketing</title>
+  <meta name="description" content="PureScan exposes the hidden truth behind food labels. Scan any product, get AI-powered health analysis, and make smarter dietary choices.">
+  <meta name="keywords" content="food scanner, ingredient analysis, health rating, nutrition, pure scan, food safety">
+  <meta name="theme-color" content="#0a0a1a">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+  <!-- Html5-QrCode Barcode Scanner -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+  <link rel="stylesheet" href="css/style.css?v=8">
+  <link rel="stylesheet" href="css/health-modules.css?v=8">
+  <link rel="stylesheet" href="css/product-images.css?v=8">
+  
+  <!-- AI Generated Themes -->
+  <link rel="stylesheet" href="css/themes/neumorphic.css">
+  <link rel="stylesheet" href="css/themes/vibrant-glass.css">
+</head>
+<body>
+
+  <!-- ===== SETTINGS MENU ===== -->
+  <div class="settings-container" id="settingsContainer">
+    <button id="settingsToggle" class="settings-toggle" aria-label="Settings Menu">
+      <i data-lucide="settings"></i>
+    </button>
+    <div id="settingsDropdown" class="settings-dropdown">
+      <button id="themeToggle" class="dropdown-item" aria-label="Toggle theme">
+        <i data-lucide="moon" class="theme-icon-dark"></i>
+        <i data-lucide="sun" class="theme-icon-light"></i>
+        <span data-i18n="theme">Theme</span>
+      </button>
+      <button id="langToggle" class="dropdown-item" aria-label="Toggle language">
+        <i data-lucide="languages"></i>
+        <span><span data-i18n="language">Language</span> (<span id="langLabel">EN</span>)</span>
+      </button>
+      <button id="uiSelectToggle" class="dropdown-item" aria-label="UI Select">
+        <i data-lucide="layout-template"></i>
+        <span class="dropdown-ui-label">
+          <span data-i18n="uiSelect">UI Select</span>
+          <span class="dropdown-coming-soon" id="activeUiLabel" style="color:var(--accent-primary);">Default Glass</span>
+        </span>
+      </button>
+      <div class="dropdown-divider"></div>
+      <button id="aboutToggle" class="dropdown-item" aria-label="About PureScan">
+        <i data-lucide="info"></i>
+        <span data-i18n="about">About</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== SCREEN 1: SPLASH / LANDING ===== -->
+  <section id="splashScreen" class="screen active">
+    <div class="splash-container">
+      <div class="splash-glow"></div>
+      <div class="logo-wrapper">
+        <div class="logo-icon">
+          <i data-lucide="scan-eye" class="logo-lucide"></i>
+        </div>
+        <h1 class="logo-text">Pure<span class="logo-accent">Scan</span></h1>
+        <p class="tagline" data-i18n="tagline">PROTOTYPE <br> Listen to Science, Not Marketing.</p>
+      </div>
+      <p class="splash-desc" data-i18n="splashDesc">Exposing the truth behind misleading food labels and empowering every household to make smarter, healthier decisions.</p>
+      <button id="btnStartScanning" class="btn btn-primary btn-glow">
+        <i data-lucide="arrow-right"></i>
+        <span data-i18n="startScanning">Start Scanning</span>
+      </button>
+      <div class="splash-stats">
+        <div class="stat-item">
+          <span class="stat-num">10K+</span>
+          <span class="stat-label" data-i18n="productsScanned">Products Scanned</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-num">95%</span>
+          <span class="stat-label" data-i18n="accuracy">Accuracy</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-num">4.8★</span>
+          <span class="stat-label" data-i18n="userRating">User Rating</span>
+        </div>
+      </div>
+      <!-- Splash Loader (shown in loading-mode for returning visitors) -->
+      <div id="splashLoader" class="splash-loader" style="display: none; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; margin-top: 2rem;">
+        <div class="spinner" style="width: 36px; height: 36px; border: 3px solid rgba(14, 165, 233, 0.1); border-top: 3px solid var(--accent-primary); border-radius: 50%; animation: ps-spin 1s linear infinite;"></div>
+        <p style="font-size: 0.9rem; color: var(--text-secondary); font-weight: 500; font-family: var(--font-display);">Securing session...</p>
+      </div>
+    </div>
+    <div class="splash-bg-orbs">
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+      <div class="orb orb-3"></div>
+    </div>
+  </section>
+
+  <!-- ===== SCREEN 2: HOW IT WORKS ===== -->
+  <section id="howItWorksScreen" class="screen">
+    <div class="screen-content">
+      <button class="btn-back" data-target="splashScreen" aria-label="Go back">
+        <i data-lucide="arrow-left"></i>
+      </button>
+      <h2 class="section-title" data-i18n="howItWorks">How It Works</h2>
+      <p class="section-sub" data-i18n="howItWorksSub">Three simple steps to uncover the truth</p>
+
+      <div class="steps-container">
+        <div class="step-card glass-card" style="--delay: 0.1s">
+          <div class="step-icon step-icon-1">
+            <i data-lucide="scan-line"></i>
+          </div>
+          <div class="step-number">01</div>
+          <h3 data-i18n="step1Title">Scan Barcode</h3>
+          <p data-i18n="step1Desc">Scan a product barcode using your camera or type the product name to begin analysis.</p>
+        </div>
+        <div class="step-card glass-card" style="--delay: 0.2s">
+          <div class="step-icon step-icon-2">
+            <i data-lucide="brain"></i>
+          </div>
+          <div class="step-number">02</div>
+          <h3 data-i18n="step2Title">AI Analyzes</h3>
+          <p data-i18n="step2Desc">Our AI decodes every ingredient, chemical, and hidden additive in seconds.</p>
+        </div>
+        <div class="step-card glass-card" style="--delay: 0.3s">
+          <div class="step-icon step-icon-3">
+            <i data-lucide="shield-check"></i>
+          </div>
+          <div class="step-number">03</div>
+          <h3 data-i18n="step3Title">Get Your Verdict</h3>
+          <p data-i18n="step3Desc">Receive a color-coded health score with detailed breakdown and alternatives.</p>
+        </div>
+      </div>
+
+      <button id="btnContinue" class="btn btn-primary">
+        <span data-i18n="continue">Continue</span>
+        <i data-lucide="arrow-right"></i>
+      </button>
+    </div>
+  </section>
+
+  <!-- ===== SCREEN 2.5: ONBOARDING / PROFILE REGISTRATION ===== -->
+  <section id="registerScreen" class="screen">
+    <div class="screen-content">
+      <div class="logo-wrapper" style="margin-top: 2rem; margin-bottom: 1.5rem; display: flex; flex-direction: column; align-items: center; text-align: center;">
+        <div class="logo-icon" style="width: 64px; height: 64px; border-radius: var(--radius-full); background: var(--accent-glow); display: flex; align-items: center; justify-content: center; border: 1px solid var(--accent-primary);">
+          <i id="authLogoIcon" data-lucide="log-in" style="width: 32px; height: 32px; color: var(--accent-primary);"></i>
+        </div>
+        <h2 id="authScreenTitle" class="section-title" data-i18n="loginTitle" style="margin-top: 1rem; font-family: var(--font-display); font-weight: 800; font-size: 1.75rem;">Login to PureScan</h2>
+        <p id="authScreenSub" class="section-sub" data-i18n="loginSub" style="color: var(--text-secondary); margin-top: 0.25rem;">Access your safe food assistant</p>
+      </div>
+
+      <form id="formRegister" class="glass-card" style="width: 100%; padding: 2rem; border-radius: var(--radius-lg); display: flex; flex-direction: column; gap: 1.25rem; background: var(--bg-card); border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); margin-bottom: 2rem;">
+        
+        <!-- Auth Type Selection Tabs -->
+        <div id="authTabsToggle" class="auth-tabs" style="display: flex; gap: 0.5rem; background: var(--bg-primary); padding: 0.25rem; border-radius: var(--radius-sm); border: 1px solid var(--glass-border);">
+          <button type="button" id="authTabLogin" class="auth-tab active" data-i18n="tabLogin" style="flex: 1; padding: 0.6rem; border-radius: var(--radius-sm); border: none; background: transparent; color: var(--text-primary); font-weight: 600; cursor: pointer; transition: all var(--transition-fast);">Login</button>
+          <button type="button" id="authTabRegister" class="auth-tab" data-i18n="tabRegister" style="flex: 1; padding: 0.6rem; border-radius: var(--radius-sm); border: none; background: transparent; color: var(--text-secondary); font-weight: 600; cursor: pointer; transition: all var(--transition-fast);">Register</button>
+        </div>
+
+        <!-- Full Name (Register Only) -->
+        <div class="form-group register-only-field" style="display: none; flex-direction: column; gap: 0.5rem;">
+          <label for="regName" data-i18n="fullNameLabel" style="font-weight: 600; font-size: 0.9rem; color: var(--text-primary);">Full Name</label>
+          <input type="text" id="regName" data-i18n-placeholder="fullName" placeholder="Enter your name" style="width: 100%; padding: 0.85rem 1.1rem; background: var(--bg-primary); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); color: var(--text-primary); outline: none; transition: border-color var(--transition-fast);">
+        </div>
+
+        <!-- Email (All modes) -->
+        <div class="form-group" style="display: flex; flex-direction: column; gap: 0.5rem;">
+          <label for="regEmail" data-i18n="emailLabel" style="font-weight: 600; font-size: 0.9rem; color: var(--text-primary);">Email Address</label>
+          <input type="email" id="regEmail" data-i18n-placeholder="emailAddress" placeholder="your.email@mail.com" style="width: 100%; padding: 0.85rem 1.1rem; background: var(--bg-primary); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); color: var(--text-primary); outline: none; transition: border-color var(--transition-fast);" required>
+        </div>
+
+        <!-- Password (Login/Register modes) -->
+        <div class="form-group auth-password-field" style="display: flex; flex-direction: column; gap: 0.5rem;">
+          <label for="regPassword" data-i18n="passwordLabel" style="font-weight: 600; font-size: 0.9rem; color: var(--text-primary);">Password</label>
+          <input type="password" id="regPassword" placeholder="••••••••" style="width: 100%; padding: 0.85rem 1.1rem; background: var(--bg-primary); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); color: var(--text-primary); outline: none; transition: border-color var(--transition-fast);" required>
+        </div>
+
+        <!-- Confirm Password (Register Only) -->
+        <div class="form-group register-only-field" style="display: none; flex-direction: column; gap: 0.5rem;">
+          <label for="regConfirmPassword" data-i18n="confirmPasswordLabel" style="font-weight: 600; font-size: 0.9rem; color: var(--text-primary);">Confirm Password</label>
+          <input type="password" id="regConfirmPassword" placeholder="••••••••" style="width: 100%; padding: 0.85rem 1.1rem; background: var(--bg-primary); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); color: var(--text-primary); outline: none; transition: border-color var(--transition-fast);">
+        </div>
+
+        <!-- Forgot Password Link (Login Only) -->
+        <div class="form-group login-only-field" style="display: flex; justify-content: flex-end; margin-top: -0.5rem;">
+          <button type="button" id="btnForgotPassword" data-i18n="forgotPasswordLink" style="background: none; border: none; color: var(--accent-primary); font-size: 0.85rem; font-weight: 600; cursor: pointer; outline: none;">Forgot Password?</button>
+        </div>
+
+        <!-- Gender (Register Only) -->
+        <div class="form-group register-only-field" style="display: none; flex-direction: column; gap: 0.5rem;">
+          <label data-i18n="gender" style="font-weight: 600; font-size: 0.9rem; color: var(--text-primary);">Gender</label>
+          <div class="gender-selection" style="display: flex; gap: 0.75rem;">
+            <button type="button" class="gender-btn active" data-gender="Male" data-i18n="genderMale" style="flex: 1; padding: 0.85rem; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); color: var(--text-primary); cursor: pointer; transition: all var(--transition-fast); font-weight: 600;">Male</button>
+            <button type="button" class="gender-btn" data-gender="Female" data-i18n="genderFemale" style="flex: 1; padding: 0.85rem; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); color: var(--text-primary); cursor: pointer; transition: all var(--transition-fast); font-weight: 600;">Female</button>
+            <button type="button" class="gender-btn" data-gender="Other" data-i18n="genderOther" style="flex: 1; padding: 0.85rem; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); color: var(--text-primary); cursor: pointer; transition: all var(--transition-fast); font-weight: 600;">Other</button>
+          </div>
+        </div>
+
+        <!-- Age (Register Only) -->
+        <div class="form-group register-only-field" style="display: none; flex-direction: column; gap: 0.5rem;">
+          <label for="regAge" data-i18n="ageLabel" style="font-weight: 600; font-size: 0.9rem; color: var(--text-primary);">Age</label>
+          <input type="number" id="regAge" placeholder="Age" min="5" max="120" style="width: 100%; padding: 0.85rem 1.1rem; background: var(--bg-primary); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); color: var(--text-primary); outline: none; transition: border-color var(--transition-fast);">
+        </div>
+
+        <!-- Goal (Register Only) -->
+        <div class="form-group register-only-field" style="display: none; flex-direction: column; gap: 0.5rem;">
+          <label for="regGoal" data-i18n="healthGoalLabel" style="font-weight: 600; font-size: 0.9rem; color: var(--text-primary);">Health Goal</label>
+          <select id="regGoal" style="width: 100%; padding: 0.85rem 1.1rem; background: var(--bg-primary); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); color: var(--text-primary); outline: none; transition: border-color var(--transition-fast); cursor: pointer; font-weight: 500;">
+            <option value="Weight Loss" data-i18n="goalWeightLoss">Weight Loss</option>
+            <option value="Weight Gain" data-i18n="goalWeightGain">Weight Gain</option>
+            <option value="Muscle Building" data-i18n="goalMuscleBuilding">Muscle Building</option>
+            <option value="Maintain Health" data-i18n="goalMaintainHealth" selected>Maintain Health</option>
+          </select>
+        </div>
+
+        <!-- Activity (Register Only) -->
+        <div class="form-group register-only-field" style="display: none; flex-direction: column; gap: 0.5rem;">
+          <label for="regActivity" data-i18n="activityLevelLabel" style="font-weight: 600; font-size: 0.9rem; color: var(--text-primary);">Activity Level</label>
+          <select id="regActivity" style="width: 100%; padding: 0.85rem 1.1rem; background: var(--bg-primary); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); color: var(--text-primary); outline: none; transition: border-color var(--transition-fast); cursor: pointer; font-weight: 500;">
+            <option value="Sedentary" data-i18n="activitySedentary">Sedentary (No Exercise)</option>
+            <option value="Active" data-i18n="activityActive" selected>Active (Regular Workout)</option>
+            <option value="Very Active" data-i18n="activityVeryActive">Very Active (Intense Training)</option>
+          </select>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" id="btnRegisterSubmit" class="btn btn-primary btn-glow" style="width: 100%; margin-top: 0.5rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.9rem;">
+          <span id="btnAuthText" data-i18n="logIn">Log In</span>
+          <i id="btnAuthIcon" data-lucide="log-in"></i>
+        </button>
+
+        <!-- Continue as Guest Option -->
+        <div id="guestBypassContainer" style="text-align: center; margin-top: 0.25rem;">
+          <button type="button" id="btnContinueAsGuest" data-i18n="continueAsGuest" style="background: none; border: none; color: var(--text-secondary); font-size: 0.85rem; font-weight: 600; cursor: pointer; outline: none; transition: color var(--transition-fast);" onmouseover="this.style.color='var(--accent-primary)'" onmouseout="this.style.color='var(--text-secondary)'">
+            Continue as Guest
+          </button>
+        </div>
+
+        <!-- Back to Login Link (Forgot Password Only) -->
+        <div id="backToLoginContainer" style="display: none; text-align: center;">
+          <button type="button" id="btnBackToLogin" data-i18n="backToLogin" style="background: none; border: none; color: var(--text-secondary); font-size: 0.85rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 0.25rem; outline: none;">
+            <i data-lucide="arrow-left" style="width: 14px; height: 14px;"></i> Back to Login
+          </button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- ===== SCREEN 3: PRODUCT INPUT (REDESIGNED HOME SCREEN) ===== -->
+  <section id="inputScreen" class="screen">
+    <!-- Header -->
+    <div class="home-header">
+      <button id="btnOpenHistory" class="header-icon-btn" aria-label="Open History">
+        <i data-lucide="history"></i>
+      </button>
+      <h1 class="logo-text">Pure<span class="logo-accent">Scan</span></h1>
+      <button id="homeSettingsToggle" class="header-icon-btn" aria-label="Settings">
+        <i data-lucide="settings"></i>
+      </button>
+    </div>
+
+    <div class="screen-content">
+      <!-- Hidden tabs for compatibility with script.js tab checking -->
+      <div class="input-tabs" style="display: none !important;">
+        <button class="tab-btn active" data-tab="textTab" id="tabTextBtn">
+          <span data-i18n="textSearch">Text Search</span>
+        </button>
+        <button class="tab-btn" data-tab="cameraTab" id="tabCameraBtn">
+          <span data-i18n="cameraUpload">Barcode Scan</span>
+        </button>
+      </div>
+
+      <!-- Search Area styled as per screenshot -->
+      <div class="search-area-container">
+        <div id="textTab" class="tab-content active" style="width: 100%;">
+          <div class="search-box">
+            <div class="search-input-wrap">
+              <i data-lucide="search" class="search-icon"></i>
+              <input type="text" id="productSearchInput" placeholder="Search products or features..." data-i18n-placeholder="searchPlaceholder" autocomplete="off">
+              <div class="search-actions-right">
+                <button id="btnVoiceInput" class="btn-voice" aria-label="Voice input">
+                  <i data-lucide="mic"></i>
+                </button>
+                <button id="searchCameraBtn" class="btn-search-camera" aria-label="Scan barcode">
+                  <i data-lucide="camera"></i>
+                </button>
+              </div>
+            </div>
+            <div id="searchSuggestions" class="search-suggestions"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Welcome Card -->
+      <div class="welcome-card">
+        <div class="welcome-card-content">
+          <h2 data-i18n="welcomeTitle">Welcome to PureScan</h2>
+          <p data-i18n="welcomeDesc">Analyze ingredients, track wellness, and chat with your AI health assistant.</p>
+        </div>
+      </div>
+
+      <!-- Feature Cards -->
+      <div class="feature-cards-container">
+        <div class="feature-card" id="btnFeatureQuickScan">
+          <div class="feature-icon-wrapper scan-icon">
+            <i data-lucide="scan-line"></i>
+          </div>
+          <span data-i18n="quickScan">Quick Scan</span>
+        </div>
+        <div class="feature-card" id="btnFeatureAiInsight">
+          <div class="feature-icon-wrapper ai-icon">
+            <span>AI</span>
+          </div>
+          <span data-i18n="aiInsight">AI Insight</span>
+        </div>
+      </div>
+
+      <!-- Hidden elements from original input screen to avoid JS errors -->
+      <div id="historySection" style="display: none !important;">
+        <!-- We keep a secondary history list here if needed, but we render in the drawer -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== HISTORY DRAWER ===== -->
+  <div id="historyDrawer" class="history-drawer-overlay" style="display: none;">
+    <div class="history-drawer">
+      <div class="history-drawer-header">
+        <div class="history-header-left">
+          <button id="btnCloseHistory" class="history-drawer-back" aria-label="Close History">
+            <i data-lucide="arrow-left"></i>
+          </button>
+          <h2 data-i18n="historyTitle">History</h2>
+        </div>
+        <button id="btnClearHistory" class="history-drawer-clear-btn" data-i18n="clearBtn">Clear</button>
+      </div>
+      <div class="history-drawer-content">
+        <div id="historyEmptyState" class="history-empty-card">
+          <p data-i18n="noHistoryText">No history yet. Scan a barcode to see history here.</p>
+        </div>
+        <div id="historyList" class="history-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== DEDICATED SCAN PANEL ===== -->
+  <div class="ps-panel" id="psScanPanel">
+    <div class="ps-panel-header">
+      <h2><i data-lucide="scan-line"></i> Barcode Scan</h2>
+      <button class="ps-panel-close" id="psScanClose" aria-label="Close">✕</button>
+    </div>
+    <div class="ps-panel-body" style="padding: 1.25rem;">
+      <!-- Barcode Scanner Tab content moved here for compatibility -->
+      <div id="cameraTab" class="tab-content active" style="display: block;">
+        <div class="camera-box glass-card">
+          <!-- Live Scanner Area -->
+          <div class="barcode-scanner-area" id="barcodeScannerArea">
+            <div id="barcodeScannerViewfinder" class="barcode-viewfinder"></div>
+            <div class="barcode-scanner-controls">
+              <button id="btnStartScanner" class="btn-scanner-action" aria-label="Start Scanner">
+                <i data-lucide="scan-line"></i>
+                <span data-i18n="startCamera">Start Camera Scanner</span>
+              </button>
+              <button id="btnStopScanner" class="btn-scanner-action btn-stop-scanner" aria-label="Stop Scanner" style="display:none;">
+                <i data-lucide="x"></i>
+                <span data-i18n="stopCamera">Stop Camera</span>
+              </button>
+            </div>
+            <div class="barcode-upload-divider">
+              <span data-i18n="or">or</span>
+            </div>
+            <div class="barcode-upload-row">
+              <button id="btnUploadBarcode" class="btn-scanner-action btn-upload-barcode" aria-label="Upload Barcode Image">
+                <i data-lucide="image"></i>
+                <span data-i18n="uploadBarcode">Upload Barcode Image</span>
+              </button>
+              <input type="file" id="barcodeFileInput" accept="image/*" hidden>
+            </div>
+          </div>
+          <!-- Decoded Barcode Display -->
+          <div id="barcodeResult" class="barcode-result" style="display:none;">
+            <div class="barcode-result-info">
+              <i data-lucide="check-circle" class="barcode-success-icon"></i>
+              <div>
+                <span class="barcode-label" data-i18n="barcodeDetected">Barcode Detected</span>
+                <span id="barcodeValue" class="barcode-value">—</span>
+              </div>
+            </div>
+            <button id="btnClearBarcode" class="btn-clear-barcode" aria-label="Clear barcode">
+              <i data-lucide="x"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      <button id="btnAnalyze" class="btn btn-primary btn-glow" disabled style="width: 100%; max-width: none; margin-top: 1rem;">
+        <i data-lucide="zap"></i>
+        <span data-i18n="analyzeProduct2">Analyze Product</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== DEDICATED BMI PANEL ===== -->
+  <div class="ps-panel" id="psBmiPanel">
+    <div class="ps-panel-header">
+      <h2 data-i18n="calculateBmi"><i data-lucide="gauge"></i> BMI Calculator</h2>
+      <button class="ps-panel-close" id="psBmiClose" aria-label="Close">✕</button>
+    </div>
+    <div class="ps-panel-body" style="padding: 1.25rem;">
+      <div class="ps-section-card">
+        <div class="ps-bmi-calculator">
+          <div class="ps-bmi-inputs">
+            <div class="ps-bmi-field">
+              <label data-i18n="weightLabel">Weight (kg)</label>
+              <input type="number" id="psBmiWeight" placeholder="e.g. 70" min="20" max="300">
+            </div>
+            <div class="ps-bmi-field">
+              <label data-i18n="heightLabel">Height (cm)</label>
+              <input type="number" id="psBmiHeight" placeholder="e.g. 170" min="100" max="250">
+            </div>
+          </div>
+          <button class="ps-bmi-btn" id="psBmiCalc" data-i18n="calculateBmi">
+            <i data-lucide="calculator"></i> Calculate BMI
+          </button>
+          <div class="ps-bmi-result" id="psBmiResult" style="padding: 1rem 1.25rem;">
+            <!-- Speedometer canvas -->
+            <div style="display: flex; justify-content: center; margin-bottom: 10px;">
+              <canvas id="psBmiGauge" width="400" height="260" style="max-width: 100%; height: auto; display: block;"></canvas>
+            </div>
+            <div class="ps-bmi-value" id="psBmiValue" style="display: none !important;">—</div>
+            <div class="ps-bmi-category" id="psBmiCategory">—</div>
+            <div class="ps-bmi-bar" style="display: none !important;"><div class="ps-bmi-marker" id="psBmiMarker"></div></div>
+            <div class="ps-bmi-labels" style="display: none !important;"><span>Underweight</span><span>Normal</span><span>Overweight</span><span>Obese</span></div>
+            <p class="ps-bmi-desc" id="psBmiDesc"></p>
+
+            <!-- AI Suggestions Card -->
+            <div id="psBmiAiSuggestions" class="ps-bmi-ai-suggestions" style="margin-top: 20px; text-align: left; padding: 15px; border-radius: 16px; border: 1px solid var(--glass-border); background: rgba(14, 165, 233, 0.05); display: none;">
+              <h4 style="display: flex; align-items: center; gap: 8px; font-weight: 700; color: #0ea5e9; font-size: 0.95rem; margin-bottom: 10px;">
+                <i data-lucide="sparkles" style="width: 18px; height: 18px; color: #0ea5e9;"></i> 
+                <span data-i18n="aiBmiSuggestions">AI Health Suggestions</span>
+              </h4>
+              <div id="psBmiAiContent" style="font-size: 0.82rem; line-height: 1.5; color: var(--text-secondary);">
+                <!-- Recommendations will load here -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== DEDICATED PROFILE PANEL ===== -->
+  <div class="ps-panel" id="psProfilePanel">
+    <div class="ps-panel-header" style="border-bottom: none;">
+      <button class="ps-panel-close-back" id="psProfileClose" aria-label="Close" style="background: none; border: none; cursor: pointer; color: var(--text-primary);"><i data-lucide="arrow-left"></i></button>
+      <h2 style="margin: 0 auto; font-family: var(--font-primary); font-weight: 700; color: #008cdb;" data-i18n="profileTitle">Profile</h2>
+      <button class="profile-bell-btn" style="background: none; border: none; cursor: pointer; color: var(--text-primary);"><i data-lucide="bell"></i></button>
+    </div>
+    <div class="ps-panel-body" style="padding: 1rem 1.25rem;">
+      <!-- Profile Card -->
+      <div class="profile-card glass-card" style="cursor: pointer;">
+        <div class="profile-avatar-container" style="position: relative;">
+          <div class="profile-avatar" id="btnTriggerAvatarUpload" style="position: relative; overflow: hidden;">
+            <i data-lucide="user" id="profileAvatarIcon"></i>
+          </div>
+          <input type="file" id="avatarFileInput" accept="image/*" style="display: none;">
+          <button class="btn-choose-photo" style="display: none !important;">Choose Photo</button>
+        </div>
+        <div class="profile-info-container">
+          <h3 class="profile-name">John Doe</h3>
+          <p class="profile-email">john.doe@mail.com</p>
+        </div>
+        <i data-lucide="chevron-right" class="profile-card-arrow"></i>
+      </div>
+      
+      <!-- Menu items -->
+      <div class="profile-menu-card glass-card">
+        <div class="profile-menu-item" id="profPersonal">
+          <div class="profile-menu-left">
+            <i data-lucide="user"></i>
+            <span data-i18n="personalInfo">Personal Information</span>
+          </div>
+          <div class="profile-menu-right" style="display: flex; align-items: center; gap: 0.5rem;">
+            <span id="profPersonalVal" style="color: var(--text-secondary); font-size: 0.85rem; font-weight: 500;">—</span>
+            <i data-lucide="chevron-right"></i>
+          </div>
+        </div>
+        <div class="profile-menu-divider"></div>
+        
+        <div class="profile-menu-item" id="profGoals">
+          <div class="profile-menu-left">
+            <i data-lucide="heart"></i>
+            <span data-i18n="healthGoals">Health Goals</span>
+          </div>
+          <div class="profile-menu-right" style="display: flex; align-items: center; gap: 0.5rem;">
+            <span id="profGoalsVal" style="color: var(--text-secondary); font-size: 0.85rem; font-weight: 500;">—</span>
+            <i data-lucide="chevron-right"></i>
+          </div>
+        </div>
+        <div class="profile-menu-divider"></div>
+        
+        <div class="profile-menu-item" id="profActivity">
+          <div class="profile-menu-left">
+            <i data-lucide="activity"></i>
+            <span data-i18n="activityLevel">Activity Level</span>
+          </div>
+          <div class="profile-menu-right" style="display: flex; align-items: center; gap: 0.5rem;">
+            <span id="profActivityVal" style="color: var(--text-secondary); font-size: 0.85rem; font-weight: 500;">—</span>
+            <i data-lucide="chevron-right"></i>
+          </div>
+        </div>
+        <div class="profile-menu-divider"></div>
+        
+        <div class="profile-menu-item" id="profSettings">
+          <div class="profile-menu-left">
+            <i data-lucide="settings"></i>
+            <span data-i18n="settings">Settings</span>
+          </div>
+          <i data-lucide="chevron-right"></i>
+        </div>
+        <div class="profile-menu-divider"></div>
+        
+        <div class="profile-menu-item" id="profLanguage">
+          <div class="profile-menu-left">
+            <i data-lucide="languages"></i>
+            <span data-i18n="language">Language</span>
+          </div>
+          <div class="profile-menu-right" style="display: flex; align-items: center; gap: 0.5rem;">
+            <span class="lang-text" style="color: var(--text-secondary); font-size: 0.85rem; font-weight: 500; margin-right: 0.25rem;">English</span>
+            <i data-lucide="chevron-right"></i>
+          </div>
+        </div>
+        <div class="profile-menu-divider"></div>
+        
+        <div class="profile-menu-item" id="profHelp">
+          <div class="profile-menu-left">
+            <i data-lucide="help-circle"></i>
+            <span data-i18n="helpSupport">Help & Support</span>
+          </div>
+          <i data-lucide="chevron-right"></i>
+        </div>
+        <div class="profile-menu-divider"></div>
+        
+        <div class="profile-menu-item" id="profAbout">
+          <div class="profile-menu-left">
+            <i data-lucide="info"></i>
+            <span data-i18n="aboutPureScan">About PureScan</span>
+          </div>
+          <i data-lucide="chevron-right"></i>
+        </div>
+        <div class="profile-menu-divider"></div>
+        
+        <div class="profile-menu-item" id="profLogout" style="color: var(--red);">
+          <div class="profile-menu-left">
+            <i data-lucide="log-out" style="color: var(--red);"></i>
+            <span style="color: var(--red);" data-i18n="logout">Logout</span>
+          </div>
+          <i data-lucide="chevron-right" style="color: var(--red);"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== EDIT PROFILE MODAL ===== -->
+  <div id="profileEditModal" class="modal" style="display:none; justify-content: center; align-items: center; z-index: var(--z-modal);">
+    <div class="modal-content glass-card" style="max-width: 420px; width: 90%; padding: 1.5rem; border-radius: var(--radius-lg); background: var(--bg-secondary); border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); position: relative;">
+      <div class="modal-header-flex" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; width: 100%;">
+        <h3 style="font-family: var(--font-display); font-weight: 700; font-size: 1.2rem; display: flex; align-items: center; gap: 0.5rem; color: #008cdb;"><i data-lucide="user-cog"></i> <span data-i18n="editProfile">Edit Profile</span></h3>
+        <button id="btnCloseProfileEdit" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-primary); display: flex; align-items: center; justify-content: center;" aria-label="Close">
+          <i data-lucide="x" style="width: 20px; height: 20px;"></i>
+        </button>
+      </div>
+
+      <form id="formEditProfile" style="display: flex; flex-direction: column; gap: 1rem; width: 100%;">
+        <div class="form-group" style="display: flex; flex-direction: column; gap: 0.35rem;">
+          <label for="editName" style="font-weight: 600; font-size: 0.85rem; color: var(--text-primary);" data-i18n="fullNameLabel">Full Name</label>
+          <input type="text" id="editName" placeholder="Your Name" data-i18n-placeholder="fullName" style="width: 100%; padding: 0.7rem 0.9rem; background: var(--bg-primary); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); color: var(--text-primary); outline: none;" required>
+        </div>
+
+        <div class="form-group" style="display: flex; flex-direction: column; gap: 0.35rem;">
+          <label for="editEmail" style="font-weight: 600; font-size: 0.85rem; color: var(--text-primary);" data-i18n="emailLabel">Email Address</label>
+          <input type="email" id="editEmail" placeholder="your.email@mail.com" data-i18n-placeholder="emailLabel" style="width: 100%; padding: 0.7rem 0.9rem; background: var(--bg-primary); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); color: var(--text-primary); outline: none;">
+        </div>
+
+        <div class="form-group" style="display: flex; flex-direction: column; gap: 0.35rem;">
+          <label style="font-weight: 600; font-size: 0.85rem; color: var(--text-primary);" data-i18n="gender">Gender</label>
+          <div class="gender-selection-edit" style="display: flex; gap: 0.5rem; width: 100%;">
+            <button type="button" class="gender-edit-btn active" data-gender="Male" style="flex: 1; padding: 0.6rem; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); color: var(--text-primary); cursor: pointer; font-size: 0.85rem; font-weight: 600;" data-i18n="genderMale">Male</button>
+            <button type="button" class="gender-edit-btn" data-gender="Female" style="flex: 1; padding: 0.6rem; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); color: var(--text-primary); cursor: pointer; font-size: 0.85rem; font-weight: 600;" data-i18n="genderFemale">Female</button>
+            <button type="button" class="gender-edit-btn" data-gender="Other" style="flex: 1; padding: 0.6rem; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); color: var(--text-primary); cursor: pointer; font-size: 0.85rem; font-weight: 600;" data-i18n="genderOther">Other</button>
+          </div>
+        </div>
+
+        <div class="form-group" style="display: flex; flex-direction: column; gap: 0.35rem;">
+          <label for="editAge" style="font-weight: 600; font-size: 0.85rem; color: var(--text-primary);" data-i18n="ageLabel">Age</label>
+          <input type="number" id="editAge" placeholder="Age" min="5" max="120" style="width: 100%; padding: 0.7rem 0.9rem; background: var(--bg-primary); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); color: var(--text-primary); outline: none;" required>
+        </div>
+
+        <div class="form-group" style="display: flex; flex-direction: column; gap: 0.35rem;">
+          <label for="editGoal" style="font-weight: 600; font-size: 0.85rem; color: var(--text-primary);" data-i18n="healthGoalLabel">Health Goal</label>
+          <select id="editGoal" style="width: 100%; padding: 0.7rem 0.9rem; background: var(--bg-primary); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); color: var(--text-primary); outline: none; cursor: pointer; font-weight: 500;">
+            <option value="Weight Loss" data-i18n="goalWeightLoss">Weight Loss</option>
+            <option value="Weight Gain" data-i18n="goalWeightGain">Weight Gain</option>
+            <option value="Muscle Building" data-i18n="goalMuscleBuilding">Muscle Building</option>
+            <option value="Maintain Health" data-i18n="goalMaintainHealth">Maintain Health</option>
+          </select>
+        </div>
+
+        <div class="form-group" style="display: flex; flex-direction: column; gap: 0.35rem;">
+          <label for="editActivity" style="font-weight: 600; font-size: 0.85rem; color: var(--text-primary);" data-i18n="activityLevelLabel">Activity Level</label>
+          <select id="editActivity" style="width: 100%; padding: 0.7rem 0.9rem; background: var(--bg-primary); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); color: var(--text-primary); outline: none; cursor: pointer; font-weight: 500;">
+            <option value="Sedentary" data-i18n="activitySedentary">Sedentary (No Exercise)</option>
+            <option value="Active" data-i18n="activityActive">Active (Regular Workout)</option>
+            <option value="Very Active" data-i18n="activityVeryActive">Very Active (Intense Training)</option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-glow" style="width: 100%; margin-top: 0.5rem; padding: 0.8rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; font-weight: 600;">
+          <span data-i18n="saveChanges">Save Changes</span>
+          <i data-lucide="save"></i>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== SCREEN 4: LOADING / ANALYSIS ===== -->
+  <section id="loadingScreen" class="screen">
+    <div class="screen-content loading-content">
+      <div class="loading-visual">
+        <div class="dna-helix">
+          <div class="dna-strand"></div>
+          <div class="dna-strand"></div>
+          <div class="dna-strand"></div>
+          <div class="dna-strand"></div>
+          <div class="dna-strand"></div>
+        </div>
+        <div class="scan-ring"></div>
+        <div class="scan-ring scan-ring-2"></div>
+      </div>
+      <h2 class="loading-title" data-i18n="analyzing">Analyzing Product...</h2>
+      <p id="loadingStatus" class="loading-status" data-i18n="fetchingData">Fetching product data from the web...</p>
+      <div class="loading-bar">
+        <div id="loadingProgress" class="loading-bar-fill"></div>
+      </div>
+      <div class="loading-steps">
+        <div class="l-step" id="lstep1">
+          <i data-lucide="globe"></i>
+          <span data-i18n="lStep1">Searching product info</span>
+        </div>
+        <div class="l-step" id="lstep2">
+          <i data-lucide="flask-conical"></i>
+          <span data-i18n="lStep2">Analyzing ingredients</span>
+        </div>
+        <div class="l-step" id="lstep3">
+          <i data-lucide="heart-pulse"></i>
+          <span data-i18n="lStep3">Calculating health score</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SCREEN 5: RESULT SUMMARY ===== -->
+  <section id="resultScreen" class="screen">
+    <div class="screen-content">
+      <button class="btn-back" data-target="inputScreen" aria-label="Go back">
+        <i data-lucide="arrow-left"></i>
+      </button>
+
+      <div class="result-hero glass-card">
+        <div id="resultBadge" class="result-badge badge-green">
+          <span id="resultScore" class="result-score">8.5</span>
+          <span class="result-of">/10</span>
+        </div>
+        <h2 id="resultProductName" class="result-product-name">Product Name</h2>
+        <div id="resultVerdict" class="result-verdict verdict-green">
+          <i data-lucide="shield-check"></i>
+          <span data-i18n="safe_verdict">Safe to Consume</span>
+        </div>
+
+        <!-- Traffic Light -->
+        <div class="traffic-light">
+          <div class="tl-light tl-green" id="tlGreen"><span>🟢</span></div>
+          <div class="tl-light tl-yellow" id="tlYellow"><span>🟡</span></div>
+          <div class="tl-light tl-red" id="tlRed"><span>🔴</span></div>
+        </div>
+      </div>
+
+      <!-- Health Scale Bar -->
+      <div class="health-scale glass-card">
+        <h3 data-i18n="healthScale">Health Scale</h3>
+        <div class="scale-bar">
+          <div class="scale-gradient"></div>
+          <div id="scaleMarker" class="scale-marker" style="left: 85%;">
+            <span class="marker-value" id="markerValue">8.5</span>
+          </div>
+        </div>
+        <div class="scale-labels">
+          <span>0 <span data-i18n="avoid">Avoid</span></span>
+          <span>5 <span data-i18n="moderate">Moderate</span></span>
+          <span>10 <span data-i18n="safe">Safe</span></span>
+        </div>
+      </div>
+
+      <!-- Quick Highlights -->
+      <div class="quick-highlights">
+        <div class="highlight-card glass-card" id="hlSugar">
+          <i data-lucide="candy"></i>
+          <span class="hl-label" data-i18n="sugarLevel">Sugar Level</span>
+          <span class="hl-value" id="hlSugarVal">Low</span>
+        </div>
+        <div class="highlight-card glass-card" id="hlProcessing">
+          <i data-lucide="factory"></i>
+          <span class="hl-label" data-i18n="processing">Processing</span>
+          <span class="hl-value" id="hlProcessingVal">Moderate</span>
+        </div>
+        <div class="highlight-card glass-card" id="hlAdditives">
+          <i data-lucide="flask-conical"></i>
+          <span class="hl-label" data-i18n="additives">Additives</span>
+          <span class="hl-value" id="hlAdditivesVal">Few</span>
+        </div>
+      </div>
+
+      <!-- Allergy Alert -->
+      <div id="allergyAlert" class="allergy-alert glass-card" style="display:none;">
+        <i data-lucide="alert-triangle"></i>
+        <div>
+          <h4 data-i18n="allergyWarning">Allergy Warning</h4>
+          <p id="allergyAlertText"></p>
+        </div>
+      </div>
+
+      <button id="btnViewReport" class="btn btn-primary">
+        <i data-lucide="file-text"></i>
+        <span data-i18n="viewFullReport">View Full Report</span>
+      </button>
+      <button id="btnScanAnother" class="btn btn-secondary">
+        <i data-lucide="refresh-cw"></i>
+        <span data-i18n="scanAnother">Scan Another Product</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ===== SCREEN 6: DETAILED REPORT ===== -->
+  <section id="reportScreen" class="screen">
+    <div class="screen-content">
+      <button class="btn-back" data-target="resultScreen" aria-label="Go back">
+        <i data-lucide="arrow-left"></i>
+      </button>
+      <h2 class="section-title" data-i18n="detailedReport">Detailed Report</h2>
+      <p class="section-sub" id="reportProductSub">for Product Name</p>
+
+      <!-- Report Sections -->
+      <div class="report-sections">
+        <!-- Ingredient Breakdown -->
+        <div class="report-card glass-card">
+          <div class="report-card-header">
+            <i data-lucide="list"></i>
+            <h3 data-i18n="ingredientBreakdown">Ingredient Breakdown</h3>
+          </div>
+          <div id="ingredientList" class="ingredient-list">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <!-- Hidden Truth -->
+        <div class="report-card glass-card">
+          <div class="report-card-header">
+            <i data-lucide="eye"></i>
+            <h3 data-i18n="hiddenTruth">The Hidden Truth</h3>
+          </div>
+          <div id="hiddenTruthContent" class="report-text">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <!-- Harmful Components -->
+        <div class="report-card glass-card report-card-danger">
+          <div class="report-card-header">
+            <i data-lucide="alert-octagon"></i>
+            <h3 data-i18n="harmfulComponents">Harmful Components</h3>
+          </div>
+          <div id="harmfulList" class="harmful-list">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <!-- Sugar & Oil Warning -->
+        <div class="report-card glass-card report-card-warning">
+          <div class="report-card-header">
+            <i data-lucide="droplets"></i>
+            <h3 data-i18n="sugarOilWarning">Sugar & Oil Warning</h3>
+          </div>
+          <div id="sugarOilContent" class="report-text">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+      </div>
+
+      <button id="btnBackToResult" class="btn btn-secondary">
+        <i data-lucide="arrow-left"></i>
+        <span data-i18n="backToSummary">Back to Summary</span>
+      </button>
+      <button id="btnShareReport" class="btn btn-primary">
+        <i data-lucide="share-2"></i>
+        <span data-i18n="shareReport">Share Report</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ===== ABOUT MODAL ===== -->
+  <div id="aboutModal" class="modal" style="display:none;">
+    <div class="modal-content glass-card about-modal-content">
+      <button id="btnCloseAbout" class="about-close" aria-label="Close">
+        <i data-lucide="x"></i>
+      </button>
+
+      <!-- App Info -->
+      <div class="about-app-header">
+        <div class="about-logo">
+          <i data-lucide="scan-eye"></i>
+        </div>
+        <h3>Pure<span class="logo-accent">Scan</span></h3>
+        <p class="about-tagline" data-i18n="aboutTagline">Listen to Science, Not Marketing.</p>
+        <span class="about-version">v1.1.1</span>
+      </div>
+
+      <p class="about-desc" data-i18n="aboutDesc">PureScan is an AI-powered transparency app that exposes the hidden truth behind misleading food labels and empowers every Indian household to make smarter, healthier decisions.</p>
+
+      <div class="about-divider"></div>
+
+      <!-- Owners -->
+      <div class="about-section">
+        <h4><i data-lucide="crown"></i> <span data-i18n="founders">Founders</span></h4>
+        <div class="about-person-card">
+          <div class="about-avatar">SG</div>
+          <div class="about-person-info">
+            <span class="about-person-name">Sundram Goud</span>
+            <a href="mailto:sundramgoud@gmail.com" class="about-link">
+              <i data-lucide="mail"></i> sundramgoud@gmail.com
+            </a>
+            
+          </div>
+        </div>
+        <div class="about-person-card">
+          <div class="about-avatar">US</div>
+          <div class="about-person-info">
+            <span class="about-person-name">Ujwal Singh</span>
+            <a href="tel:+918856851228" class="about-link">
+              <i data-lucide="phone"></i> +91 8856851228
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="about-divider"></div>
+
+      <!-- Developer -->
+      <div class="about-section">
+        <h4><i data-lucide="code-2"></i> <span data-i18n="developer">Developer</span></h4>
+        <div class="about-person-card">
+          <div class="about-avatar dev-avatar">J</div>
+          <div class="about-person-info">
+            <span class="about-person-name">Jaswant</span>
+            <a href="https://instagram.com/jaswant_0707" target="_blank" rel="noopener" class="about-link">
+              <svg class="about-insta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg> @jaswant_0707
+            </a>
+            <a href="mailto:jaswanty132@gmail.com" class="about-link">
+              <i data-lucide="mail"></i> jaswanty132@gmail.com
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="about-footer">
+        <span data-i18n="madeWithLove">Made with ❤️ in India</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== LANGUAGE MODAL ===== -->
+  <div id="languageModal" class="modal" style="display:none;">
+    <div class="modal-content glass-card language-modal-content">
+      <div class="modal-header-flex">
+        <h3><i data-lucide="languages"></i> Select Language</h3>
+        <button id="btnCloseLanguage" class="about-close" aria-label="Close">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="language-grid" id="languageGrid">
+        <!-- dynamically populated -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== ERROR MODAL ===== -->
+  <div id="errorModal" class="modal" style="display:none;">
+    <div class="modal-content glass-card">
+      <div class="modal-icon-error">
+        <i data-lucide="alert-circle"></i>
+      </div>
+      <h3 data-i18n="oops">Oops!</h3>
+      <p id="errorMessage">Something went wrong. Please try again.</p>
+      <div class="modal-actions" style="display: flex; gap: 10px; width: 100%; justify-content: center; margin-top: 15px;">
+        <button id="btnCancelError" class="btn btn-secondary" style="display: none; flex: 1;" data-i18n="cancel">Cancel</button>
+        <button id="btnCloseError" class="btn btn-primary" style="flex: 1;" data-i18n="tryAgain">Try Again</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== UI SELECT MODAL ===== -->
+  <div id="uiSelectModal" class="modal" style="display:none;">
+    <div class="modal-content about-modal-content" style="max-width: 320px;">
+      <div class="modal-header-flex">
+        <h3><i data-lucide="palette"></i> <span data-i18n="uiSelect">UI Select</span></h3>
+        <button id="btnCloseUiSelect" class="ps-barcode-modal-close" aria-label="Close">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="language-grid" style="grid-template-columns: 1fr;">
+        <button class="lang-btn active ui-theme-btn" data-theme-val="default">
+          <div style="display:flex; align-items:center; gap:0.75rem;">
+            <i data-lucide="layers"></i>
+            <div>
+              <div class="lang-btn-name" data-i18n="themeDefaultName">Default Glass</div>
+              <div class="lang-btn-code" data-i18n="themeDefaultDesc">Standard</div>
+            </div>
+          </div>
+        </button>
+        <button class="lang-btn ui-theme-btn" data-theme-val="neumorphic">
+          <div style="display:flex; align-items:center; gap:0.75rem;">
+            <i data-lucide="box"></i>
+            <div>
+              <div class="lang-btn-name" data-i18n="themeNeumorphicName">Neumorphic 3D</div>
+              <div class="lang-btn-code" data-i18n="themeNeumorphicDesc">Physical Shadows</div>
+            </div>
+          </div>
+        </button>
+        <button class="lang-btn ui-theme-btn" data-theme-val="vibrant">
+          <div style="display:flex; align-items:center; gap:0.75rem;">
+            <i data-lucide="sparkles"></i>
+            <div>
+              <div class="lang-btn-name" data-i18n="themeVibrantName">Vibrant Glass</div>
+              <div class="lang-btn-code" data-i18n="themeVibrantDesc">Motion Animated</div>
+            </div>
+          </div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== UPDATE / RELEASE NOTES MODAL ===== -->
+  <div id="updateModal" class="modal" style="display:none; justify-content: center; align-items: center; z-index: var(--z-modal);">
+    <div class="modal-content glass-card" style="max-width: 450px; width: 90%; padding: 2.25rem 2rem; border-radius: var(--radius-lg); background: var(--bg-secondary); border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); position: relative; text-align: center;">
+      <div style="background: rgba(14, 165, 233, 0.1); border: 1px solid var(--accent-primary); width: 60px; height: 60px; border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem auto;">
+        <i data-lucide="sparkles" style="color: var(--accent-primary); width: 28px; height: 28px;"></i>
+      </div>
+      <h3 style="font-family: var(--font-display); font-weight: 800; font-size: 1.5rem; margin-bottom: 0.25rem; color: var(--accent-primary);" data-i18n="updateWelcome">🎉 Welcome to PureScan v1.1.1</h3>
+      <span style="background: rgba(16, 185, 129, 0.15); color: #10b981; padding: 0.25rem 0.75rem; border-radius: var(--radius-full); font-size: 0.8rem; font-weight: 700; display: inline-block; margin-bottom: 1.25rem;" data-i18n="updateReleased">New Version Released</span>
+      
+      <!-- What's New List -->
+      <div style="text-align: left; background: var(--bg-primary); border: 1px solid var(--glass-border); padding: 1.25rem; border-radius: var(--radius-md); margin-bottom: 1.5rem; font-size: 0.85rem; line-height: 1.6; color: var(--text-secondary); max-height: 250px; overflow-y: auto;">
+        <p style="margin-bottom: 0.75rem; font-weight: 600; color: var(--text-primary);" data-i18n="updateWhatsNew">What's New in this release:</p>
+        <ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 0.6rem;">
+          <li style="display: flex; align-items: flex-start; gap: 0.5rem;"><span style="color: #10b981;">✅</span> <span data-i18n="updateFeature1"><strong>Firebase Cloud Sync</strong>: Sync your history & profile to the cloud securely.</span></li>
+          <li style="display: flex; align-items: flex-start; gap: 0.5rem;"><span style="color: #10b981;">✅</span> <span data-i18n="updateFeature2"><strong>Secure User Accounts</strong>: Restrict access to your private search history.</span></li>
+          <li style="display: flex; align-items: flex-start; gap: 0.5rem;"><span style="color: #10b981;">✅</span> <span data-i18n="updateFeature3"><strong>Login & Registration</strong>: Seamless registration and email-password authentication.</span></li>
+          <li style="display: flex; align-items: flex-start; gap: 0.5rem;"><span style="color: #10b981;">✅</span> <span data-i18n="updateFeature4"><strong>Cloud Profile Storage</strong>: Store age, goals, activity level & upload custom profile avatars.</span></li>
+          <li style="display: flex; align-items: flex-start; gap: 0.5rem;"><span style="color: #10b981;">✅</span> <span data-i18n="updateFeature5"><strong>Cross-Device Data Sync</strong>: Log in from any phone or PC to access your details instantly.</span></li>
+          <li style="display: flex; align-items: flex-start; gap: 0.5rem;"><span style="color: #10b981;">✅</span> <span data-i18n="updateFeature6"><strong>Improved Barcode Accuracy</strong>: Direct Open Food Facts database resolution for barcodes.</span></li>
+          <li style="display: flex; align-items: flex-start; gap: 0.5rem;"><span style="color: #10b981;">✅</span> <span data-i18n="updateFeature7"><strong>Better History Management</strong>: Scoped Firestore transactions for clearing history.</span></li>
+          <li style="display: flex; align-items: flex-start; gap: 0.5rem;"><span style="color: #10b981;">✅</span> <span data-i18n="updateFeature8"><strong>Improved Security</strong>: Firestore & Firebase Storage granular access rules.</span></li>
+          <li style="display: flex; align-items: flex-start; gap: 0.5rem;"><span style="color: #10b981;">✅</span> <span data-i18n="updateFeature9"><strong>Performance Improvements</strong>: Lazy loading modules and optimized bundle flows.</span></li>
+          <li style="display: flex; align-items: flex-start; gap: 0.5rem;"><span style="color: #10b981;">✅</span> <span data-i18n="updateFeature10"><strong>Bug Fixes</strong>: Resolved camera freezes and scanner downscaling errors.</span></li>
+        </ul>
+      </div>
+
+      <!-- Action Buttons -->
+      <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+        <button id="btnCloseUpdate" class="btn btn-primary btn-glow" style="width: 100%; padding: 0.85rem; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+          <span data-i18n="updateContinue">Continue</span>
+          <i data-lucide="check"></i>
+        </button>
+        <button id="btnReleaseNotes" class="btn" style="width: 100%; padding: 0.85rem; font-weight: 600; background: var(--glass-bg); border: 1px solid var(--glass-border); color: var(--text-primary); cursor: pointer; transition: all var(--transition-fast); display: flex; align-items: center; justify-content: center; gap: 0.5rem; border-radius: var(--radius-sm);">
+          <span data-i18n="updateReleaseNotes">View Release Notes</span>
+          <i data-lucide="external-link" style="width: 16px; height: 16px;"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== CUSTOM CONFIRM MODAL ===== -->
+  <div id="confirmModal" class="modal" style="display:none; justify-content: center; align-items: center; z-index: var(--z-modal);">
+    <div class="modal-content glass-card" style="max-width: 400px; width: 90%; padding: 2rem; border-radius: var(--radius-lg); background: var(--bg-secondary); border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); position: relative; text-align: center;">
+      <div style="background: rgba(14, 165, 233, 0.1); border: 1px solid var(--accent-primary); width: 50px; height: 50px; border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem auto;">
+        <i data-lucide="help-circle" style="color: var(--accent-primary); width: 24px; height: 24px;"></i>
+      </div>
+      <h3 id="confirmTitle" style="font-family: var(--font-display); font-weight: 700; font-size: 1.25rem; margin-bottom: 0.75rem; color: var(--accent-primary);" data-i18n="confirm">Confirm</h3>
+      <p id="confirmMessage" style="font-size: 0.9rem; line-height: 1.5; color: var(--text-secondary); margin-bottom: 1.5rem;">Are you sure?</p>
+      <div style="display: flex; gap: 0.75rem; width: 100%;">
+        <button id="btnConfirmCancel" class="btn" style="flex: 1; padding: 0.75rem; font-weight: 600; background: var(--glass-bg); border: 1px solid var(--glass-border); color: var(--text-primary); cursor: pointer; border-radius: var(--radius-sm);" data-i18n="cancel">Cancel</button>
+        <button id="btnConfirmOK" class="btn btn-primary" style="flex: 1; padding: 0.75rem; font-weight: 600;" data-i18n="confirm">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase SDK Compat -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+
+  <script src="js/translations.js?v=12"></script>
+  <script src="js/script.js?v=12"></script>
+  <script src="js/health-modules.js?v=12"></script>
+  <script src="js/product-images.js?v=12"></script>
+  <script src="js/system-rec.js?v=12"></script>
+</body>
+</html>

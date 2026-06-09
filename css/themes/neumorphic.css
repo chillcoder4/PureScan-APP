@@ -1,0 +1,290 @@
+/* =============================================
+   PureScan — UI Theme: Neumorphic 3D
+   Physical, soft shadows, inset/outset depth.
+   ============================================= */
+
+html[data-ui-theme="neumorphic"] {
+  --bg-primary: #e0e5ec;
+  --bg-secondary: #e0e5ec;
+  --bg-card: #e0e5ec;
+  --bg-card-hover: #e0e5ec;
+  --glass-bg: #e0e5ec;
+  --glass-border: transparent;
+  --glass-shadow: 9px 9px 16px rgba(163,177,198,0.6), -9px -9px 16px rgba(255,255,255, 0.5);
+  
+  --text-primary: #4a4a4a;
+  --text-secondary: #6b6b6b;
+  --text-muted: #9a9a9a;
+
+  --accent-primary: #48c6ef;
+  --accent-secondary: #6f86d6;
+  --accent-gradient: linear-gradient(135deg, #48c6ef 0%, #6f86d6 100%);
+  --accent-glow: rgba(72, 198, 239, 0.3);
+
+  --green: #27ae60;
+  --yellow: #f39c12;
+  --red: #e74c3c;
+
+  --green-bg: #e0e5ec;
+  --green-border: transparent;
+  --yellow-bg: #e0e5ec;
+  --yellow-border: transparent;
+  --red-bg: #e0e5ec;
+  --red-border: transparent;
+  
+  /* Neumorphic Shadows */
+  --neu-shadow: 9px 9px 16px rgba(163,177,198,0.6), -9px -9px 16px rgba(255,255,255, 0.6);
+  --neu-shadow-sm: 5px 5px 10px rgba(163,177,198,0.5), -5px -5px 10px rgba(255,255,255, 0.5);
+  --neu-shadow-inset: inset 6px 6px 10px rgba(163,177,198,0.6), inset -6px -6px 10px rgba(255,255,255, 0.6);
+}
+
+/* Base Overrides */
+html[data-ui-theme="neumorphic"] body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* Global Elements */
+html[data-ui-theme="neumorphic"] .glass-card,
+html[data-ui-theme="neumorphic"] .health-panel-content,
+html[data-ui-theme="neumorphic"] .modal-content,
+html[data-ui-theme="neumorphic"] .settings-dropdown,
+html[data-ui-theme="neumorphic"] .suggestion-box,
+html[data-ui-theme="neumorphic"] .ps-panel {
+  background: var(--bg-primary);
+  border: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: var(--neu-shadow) !important;
+  border-radius: var(--radius-lg);
+}
+
+/* Buttons */
+html[data-ui-theme="neumorphic"] .btn {
+  background: var(--bg-primary) !important;
+  border: none !important;
+  color: var(--accent-secondary) !important;
+  box-shadow: var(--neu-shadow-sm);
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  transition: all 0.2s ease;
+}
+html[data-ui-theme="neumorphic"] .btn:hover {
+  box-shadow: var(--neu-shadow-inset);
+  transform: translateY(2px);
+}
+html[data-ui-theme="neumorphic"] .btn i {
+  stroke-width: 2.5;
+}
+
+html[data-ui-theme="neumorphic"] .btn-primary {
+  color: var(--bg-primary) !important;
+  background: var(--accent-gradient) !important;
+  box-shadow: 4px 4px 10px rgba(111, 134, 214, 0.3), -4px -4px 10px rgba(255,255,255,0.5) !important;
+}
+
+html[data-ui-theme="neumorphic"] .btn-icon-circle {
+  border: none;
+  background: var(--bg-primary);
+  box-shadow: var(--neu-shadow-sm);
+  color: var(--accent-primary);
+}
+html[data-ui-theme="neumorphic"] .btn-icon-circle:hover {
+  box-shadow: var(--neu-shadow-inset);
+}
+html[data-ui-theme="neumorphic"] .btn-icon-circle i {
+  stroke-width: 2.5;
+}
+
+/* Settings Toggle */
+html[data-ui-theme="neumorphic"] .settings-toggle {
+  border: none;
+  box-shadow: var(--neu-shadow-sm);
+  background: var(--bg-primary);
+}
+html[data-ui-theme="neumorphic"] .settings-toggle:hover {
+  box-shadow: var(--neu-shadow-inset);
+}
+
+/* Inputs */
+html[data-ui-theme="neumorphic"] .product-search-input {
+  background: var(--bg-primary);
+  border: none;
+  box-shadow: var(--neu-shadow-inset);
+  color: var(--text-primary);
+  padding: 1.2rem;
+}
+html[data-ui-theme="neumorphic"] .product-search-input:focus {
+  box-shadow: var(--neu-shadow-inset), 0 0 0 2px var(--accent-glow);
+}
+
+/* Nav Bar */
+html[data-ui-theme="neumorphic"] .bottom-nav,
+html[data-ui-theme="neumorphic"] .ps-bottom-nav {
+  background: var(--bg-primary);
+  border-top: none;
+  box-shadow: 0 -10px 20px rgba(163,177,198,0.3);
+  backdrop-filter: none;
+}
+html[data-ui-theme="neumorphic"] .nav-item,
+html[data-ui-theme="neumorphic"] .ps-nav-item {
+  color: var(--text-muted);
+}
+html[data-ui-theme="neumorphic"] .nav-item.active,
+html[data-ui-theme="neumorphic"] .ps-nav-item.ps-nav-active {
+  color: var(--accent-primary);
+  transform: translateY(-2px);
+}
+html[data-ui-theme="neumorphic"] .nav-item.active .nav-icon,
+html[data-ui-theme="neumorphic"] .ps-nav-item.ps-nav-active i {
+  background: var(--bg-primary);
+  box-shadow: var(--neu-shadow-inset);
+  padding: 4px;
+  border-radius: 5px;
+}
+html[data-ui-theme="neumorphic"] .nav-icon i,
+html[data-ui-theme="neumorphic"] .ps-nav-item i {
+  stroke-width: 2.5;
+}
+
+/* Cards & Lists */
+html[data-ui-theme="neumorphic"] .step-card,
+html[data-ui-theme="neumorphic"] .history-item,
+html[data-ui-theme="neumorphic"] .ingredient-item,
+html[data-ui-theme="neumorphic"] .harmful-item,
+html[data-ui-theme="neumorphic"] .health-accordion-header {
+  background: var(--bg-primary) !important;
+  border: none !important;
+  box-shadow: var(--neu-shadow-sm);
+  margin-bottom: 0.75rem;
+}
+
+/* Make icons bolder overall to match the physical style */
+html[data-ui-theme="neumorphic"] .lucide {
+  stroke-width: 2.2 !important;
+}
+
+/* Special Module Adjustments */
+/* AI Chat View */
+html[data-ui-theme="neumorphic"] .chat-bubble {
+  box-shadow: var(--neu-shadow-sm);
+  border: none;
+  border-radius: 18px;
+}
+html[data-ui-theme="neumorphic"] .chat-bubble-user {
+  background: var(--accent-gradient);
+  color: white;
+  box-shadow: 4px 4px 10px rgba(111,134,214,0.3);
+}
+html[data-ui-theme="neumorphic"] .chat-bubble-ai {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* Loading Steps */
+html[data-ui-theme="neumorphic"] .loading-step-icon {
+  background: var(--bg-primary);
+  box-shadow: var(--neu-shadow-sm);
+  border: none;
+}
+html[data-ui-theme="neumorphic"] .loading-step.active .loading-step-icon {
+  box-shadow: var(--neu-shadow-inset);
+  color: var(--accent-primary);
+}
+
+/* Alerts and Status */
+html[data-ui-theme="neumorphic"] .allergy-alert,
+html[data-ui-theme="neumorphic"] .barcode-result {
+  background: var(--bg-primary);
+  border: none;
+  box-shadow: var(--neu-shadow-inset);
+}
+html[data-ui-theme="neumorphic"] .barcode-result-info .barcode-success-icon {
+  filter: drop-shadow(0 2px 4px rgba(39, 174, 96, 0.4));
+}
+html[data-ui-theme="neumorphic"] .allergy-alert i {
+  filter: drop-shadow(0 2px 4px rgba(231, 76, 60, 0.4));
+}
+
+/* Badges */
+html[data-ui-theme="neumorphic"] .result-badge {
+  box-shadow: var(--neu-shadow);
+  border: none;
+  background: var(--bg-primary);
+}
+html[data-ui-theme="neumorphic"] .result-badge.badge-green { color: var(--green); }
+html[data-ui-theme="neumorphic"] .result-badge.badge-yellow { color: var(--yellow); }
+html[data-ui-theme="neumorphic"] .result-badge.badge-red { color: var(--red); }
+
+/* Health Scale */
+html[data-ui-theme="neumorphic"] .scale-bar {
+  background: var(--bg-primary);
+  box-shadow: var(--neu-shadow-inset);
+  border-radius: var(--radius-full);
+}
+html[data-ui-theme="neumorphic"] .scale-marker {
+  box-shadow: var(--neu-shadow-sm);
+  border: 4px solid var(--bg-primary);
+}
+
+/* Viewfinder & Barcode Scanner Elements */
+html[data-ui-theme="neumorphic"] .barcode-viewfinder {
+  box-shadow: var(--neu-shadow-inset);
+  background: transparent;
+  padding: 10px;
+}
+html[data-ui-theme="neumorphic"] .barcode-viewfinder video {
+  border-radius: calc(var(--radius-md) - 5px);
+}
+html[data-ui-theme="neumorphic"] .btn-scanner-action {
+  background: var(--bg-primary);
+  border: none;
+  box-shadow: var(--neu-shadow-sm);
+  color: var(--text-primary);
+}
+html[data-ui-theme="neumorphic"] .btn-scanner-action:hover {
+  box-shadow: var(--neu-shadow-inset);
+  transform: translateY(2px);
+}
+html[data-ui-theme="neumorphic"] .btn-stop-scanner {
+  color: var(--red);
+}
+html[data-ui-theme="neumorphic"] .btn-upload-barcode {
+  color: var(--accent-primary);
+}
+html[data-ui-theme="neumorphic"] .upload-area {
+  border: 2px dashed rgba(163,177,198,0.6);
+  background: var(--bg-primary);
+  box-shadow: var(--neu-shadow-inset);
+}
+html[data-ui-theme="neumorphic"] .upload-area:hover {
+  border-color: var(--accent-primary);
+}
+html[data-ui-theme="neumorphic"] .ps-product-img-wrap {
+  border: 4px solid var(--bg-primary);
+  box-shadow: var(--neu-shadow);
+  background: var(--bg-primary);
+}
+html[data-ui-theme="neumorphic"] .ps-product-img-wrap:hover {
+  box-shadow: var(--neu-shadow-sm);
+}
+
+/* =============================================
+   LAYOUT OVERRIDES (Compact & Physical)
+   ============================================= */
+/* Navigation */
+html[data-ui-theme="neumorphic"] .ps-bottom-nav {
+ bottom: 0.5rem !important;
+  left: 1.5rem !important;
+  right: 1.5rem !important;
+  border-radius: var(--radius-xl) !important;
+  padding: 0.5rem 0.5rem !important;
+  border-top: none !important;
+}
+
+/* Hide Dark/Light Mode Toggle */
+html[data-ui-theme="neumorphic"] #themeToggle {
+  display: none !important;
+}
+
+
