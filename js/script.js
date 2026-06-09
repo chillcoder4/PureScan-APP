@@ -558,12 +558,9 @@ function initSearchSuggestions() {
 
   DOM.productSearchInput.addEventListener('input', (e) => {
     const query = e.target.value.trim().toLowerCase();
-<<<<<<< HEAD
     if (AppState.scannedBarcode) {
       clearBarcodeResult();
     }
-=======
->>>>>>> a39291dd39e8f0fccb4a83481de239c8cc703ccc
     updateAnalyzeButtonState();
     showSuggestionsDebounced(query);
   });
@@ -933,18 +930,10 @@ function initVoiceInput() {
 // ANALYZE BUTTON STATE
 // ==========================================
 function updateAnalyzeButtonState() {
-<<<<<<< HEAD
   const hasTextInput = DOM.productSearchInput.value.trim().length > 0;
   const hasBarcode = AppState.scannedBarcode !== null;
 
   DOM.btnAnalyze.disabled = !(hasTextInput || hasBarcode);
-=======
-  const textTabActive = document.querySelector('.tab-btn.active')?.getAttribute('data-tab') === 'textTab';
-  const hasTextInput = DOM.productSearchInput.value.trim().length > 0;
-  const hasBarcode = AppState.scannedBarcode !== null;
-
-  DOM.btnAnalyze.disabled = !(textTabActive ? hasTextInput : hasBarcode);
->>>>>>> a39291dd39e8f0fccb4a83481de239c8cc703ccc
 }
 
 // ==========================================
@@ -968,7 +957,6 @@ async function startAnalysis() {
   AppState.isAnalyzing = true;
 
   // Determine product name / barcode query
-<<<<<<< HEAD
   if (AppState.scannedBarcode) {
     AppState.productName = generateBarcodeQuery(AppState.scannedBarcode);
   } else {
@@ -978,25 +966,6 @@ async function startAnalysis() {
   if (!AppState.productName) {
     DOM.productSearchInput.classList.add('shake');
     setTimeout(() => DOM.productSearchInput.classList.remove('shake'), 400);
-=======
-  const textTabActive = document.querySelector('.tab-btn.active')?.getAttribute('data-tab') === 'textTab';
-  if (textTabActive) {
-    AppState.productName = DOM.productSearchInput.value.trim();
-  } else {
-    // For barcode scans, generate smart search query
-    if (AppState.scannedBarcode) {
-      AppState.productName = generateBarcodeQuery(AppState.scannedBarcode);
-    } else {
-      AppState.productName = '';
-    }
-  }
-
-  if (!AppState.productName) {
-    if (textTabActive) {
-      DOM.productSearchInput.classList.add('shake');
-      setTimeout(() => DOM.productSearchInput.classList.remove('shake'), 400);
-    }
->>>>>>> a39291dd39e8f0fccb4a83481de239c8cc703ccc
     AppState.isAnalyzing = false;
     return;
   }
@@ -1632,7 +1601,6 @@ function bindEvents() {
     document.querySelector('.auth-password-field').style.display = 'flex';
     document.getElementById('backToLoginContainer').style.display = 'none';
     
-<<<<<<< HEAD
     if (btnRegisterSubmit) {
       btnRegisterSubmit.disabled = false;
       btnRegisterSubmit.innerHTML = `
@@ -1640,10 +1608,6 @@ function bindEvents() {
         <i id="btnAuthIcon" data-lucide="log-in"></i>
       `;
     }
-=======
-    document.getElementById('btnAuthText').textContent = t('logIn');
-    document.getElementById('btnAuthIcon').setAttribute('data-lucide', 'log-in');
->>>>>>> a39291dd39e8f0fccb4a83481de239c8cc703ccc
     
     document.getElementById('regName').removeAttribute('required');
     document.getElementById('regAge').removeAttribute('required');
@@ -1666,7 +1630,6 @@ function bindEvents() {
     document.querySelector('.auth-password-field').style.display = 'flex';
     document.getElementById('backToLoginContainer').style.display = 'none';
     
-<<<<<<< HEAD
     if (btnRegisterSubmit) {
       btnRegisterSubmit.disabled = false;
       btnRegisterSubmit.innerHTML = `
@@ -1674,10 +1637,6 @@ function bindEvents() {
         <i id="btnAuthIcon" data-lucide="check"></i>
       `;
     }
-=======
-    document.getElementById('btnAuthText').textContent = t('createProfileAndRegister');
-    document.getElementById('btnAuthIcon').setAttribute('data-lucide', 'check');
->>>>>>> a39291dd39e8f0fccb4a83481de239c8cc703ccc
     
     document.getElementById('regName').setAttribute('required', 'true');
     document.getElementById('regAge').setAttribute('required', 'true');
@@ -1698,7 +1657,6 @@ function bindEvents() {
     document.querySelector('.auth-password-field').style.display = 'none';
     document.getElementById('backToLoginContainer').style.display = 'block';
     
-<<<<<<< HEAD
     if (btnRegisterSubmit) {
       btnRegisterSubmit.disabled = false;
       btnRegisterSubmit.innerHTML = `
@@ -1706,10 +1664,6 @@ function bindEvents() {
         <i id="btnAuthIcon" data-lucide="mail"></i>
       `;
     }
-=======
-    document.getElementById('btnAuthText').textContent = t('sendResetLink');
-    document.getElementById('btnAuthIcon').setAttribute('data-lucide', 'mail');
->>>>>>> a39291dd39e8f0fccb4a83481de239c8cc703ccc
     
     document.getElementById('regPassword').removeAttribute('required');
     document.getElementById('regName').removeAttribute('required');
@@ -2407,11 +2361,7 @@ function init() {
         document.getElementById('splashScreen').classList.add('active');
       }, 100);
     } else {
-<<<<<<< HEAD
       if (wasLoggedIn || isGuestMode) {
-=======
-      if (isGuestMode) {
->>>>>>> a39291dd39e8f0fccb4a83481de239c8cc703ccc
         navigateTo('inputScreen');
       } else {
         navigateTo('registerScreen');
@@ -2445,11 +2395,7 @@ function init() {
         if (splash) splash.classList.add('active');
       }, 100);
     } else {
-<<<<<<< HEAD
       if (wasLoggedIn || isGuestMode) {
-=======
-      if (isGuestMode) {
->>>>>>> a39291dd39e8f0fccb4a83481de239c8cc703ccc
         navigateTo('inputScreen');
       } else {
         navigateTo('registerScreen');

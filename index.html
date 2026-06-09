@@ -26,6 +26,7 @@
   <!-- AI Generated Themes -->
   <link rel="stylesheet" href="css/themes/neumorphic.css">
   <link rel="stylesheet" href="css/themes/vibrant-glass.css">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://www.gstatic.com https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.netlify.app;">
 </head>
 <body>
 
@@ -195,7 +196,7 @@
 
         <!-- Gender (Register Only) -->
         <div class="form-group register-only-field" style="display: none; flex-direction: column; gap: 0.5rem;">
-          <label data-i18n="gender" style="font-weight: 600; font-size: 0.9rem; color: var(--text-primary);">Gender</label>
+          <span data-i18n="gender" style="font-weight: 600; font-size: 0.9rem; color: var(--text-primary);">Gender</span>
           <div class="gender-selection" style="display: flex; gap: 0.75rem;">
             <button type="button" class="gender-btn active" data-gender="Male" data-i18n="genderMale" style="flex: 1; padding: 0.85rem; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); color: var(--text-primary); cursor: pointer; transition: all var(--transition-fast); font-weight: 600;">Male</button>
             <button type="button" class="gender-btn" data-gender="Female" data-i18n="genderFemale" style="flex: 1; padding: 0.85rem; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); color: var(--text-primary); cursor: pointer; transition: all var(--transition-fast); font-weight: 600;">Female</button>
@@ -417,11 +418,11 @@
         <div class="ps-bmi-calculator">
           <div class="ps-bmi-inputs">
             <div class="ps-bmi-field">
-              <label data-i18n="weightLabel">Weight (kg)</label>
+              <label for="psBmiWeight" data-i18n="weightLabel">Weight (kg)</label>
               <input type="number" id="psBmiWeight" placeholder="e.g. 70" min="20" max="300">
             </div>
             <div class="ps-bmi-field">
-              <label data-i18n="heightLabel">Height (cm)</label>
+              <label for="psBmiHeight" data-i18n="heightLabel">Height (cm)</label>
               <input type="number" id="psBmiHeight" placeholder="e.g. 170" min="100" max="250">
             </div>
           </div>
@@ -589,7 +590,7 @@
         </div>
 
         <div class="form-group" style="display: flex; flex-direction: column; gap: 0.35rem;">
-          <label style="font-weight: 600; font-size: 0.85rem; color: var(--text-primary);" data-i18n="gender">Gender</label>
+          <span style="font-weight: 600; font-size: 0.85rem; color: var(--text-primary);" data-i18n="gender">Gender</span>
           <div class="gender-selection-edit" style="display: flex; gap: 0.5rem; width: 100%;">
             <button type="button" class="gender-edit-btn active" data-gender="Male" style="flex: 1; padding: 0.6rem; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); color: var(--text-primary); cursor: pointer; font-size: 0.85rem; font-weight: 600;" data-i18n="genderMale">Male</button>
             <button type="button" class="gender-edit-btn" data-gender="Female" style="flex: 1; padding: 0.6rem; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); color: var(--text-primary); cursor: pointer; font-size: 0.85rem; font-weight: 600;" data-i18n="genderFemale">Female</button>

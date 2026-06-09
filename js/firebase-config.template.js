@@ -11,7 +11,6 @@ const firebaseConfig = {
   projectNumber: "[[FIREBASE_PROJECT_NUMBER]]"
 };
 
-<<<<<<< HEAD
 let PureFirebase;
 
 try {
@@ -27,15 +26,6 @@ try {
       auth: firebase.auth(),
       db: firebase.firestore(),
       storage: firebase.storage(),
-=======
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-
-const PureFirebase = {
-  auth: firebase.auth(),
-  db: firebase.firestore(),
-  storage: firebase.storage(),
->>>>>>> a39291dd39e8f0fccb4a83481de239c8cc703ccc
 
   // Current logged in user profile cache
   currentUserProfile: null,
@@ -353,7 +343,6 @@ const PureFirebase = {
     });
   }
 };
-<<<<<<< HEAD
   } else {
     throw new Error("Firebase SDK was not loaded");
   }
@@ -391,5 +380,3 @@ const PureFirebase = {
     async submitFeedback() { throw new Error("Firebase is not available."); }
   };
 }
-=======
->>>>>>> a39291dd39e8f0fccb4a83481de239c8cc703ccc

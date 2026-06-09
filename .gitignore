@@ -3,10 +3,7 @@
 .env.local
 .env.production
 js/firebase-config.js
-<<<<<<< HEAD
 graphify-out/
-=======
->>>>>>> a39291dd39e8f0fccb4a83481de239c8cc703ccc
 
 
 # Local Netlify folder
